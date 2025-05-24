@@ -5,6 +5,7 @@ import * as path from 'path';
 import { BotState } from '../state.js';
 import { logger } from '../utils/logger.js';
 import { t, getUserLang } from '../i18n.js';
+import { splitMessage } from '../utils/message-splitter.js';
 
 export async function handleMessage(ctx: Context, state: BotState): Promise<void> {
   const text = (ctx.message as any).text;
@@ -114,9 +115,7 @@ async function runtimeExecuteInBackground(
       // Ignore if can't delete
     }
 
-    const chunkSize = 4000;
-    for (let i = 0; i < output.length; i += chunkSize) {
-      const chunk = output.slice(i, i + chunkSize);
+    for (const chunk of splitMessage(output)) {
       await ctx.reply(chunk);
     }
   } catch (error: any) {
