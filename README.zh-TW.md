@@ -333,12 +333,7 @@ handle_message 佔住 update queue，等 Claude 回應
 | Ko-fi | [![Ko-fi](https://img.shields.io/badge/Ko--fi-ff5e5b?logo=kofi)](https://ko-fi.com/YOUR_USERNAME) |
 | 加密貨幣 | USDT (TRC20): `YOUR_WALLET_ADDRESS` |
 
-<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
-  <input type="hidden" name="cmd" value="_s-xclick" />
-  <input type="hidden" name="hosted_button_id" value="4T7LWBH63XQEE" />
-  <input type="hidden" name="currency_code" value="USD" />
-  <input type="submit" value="Donate with PayPal" style="background:#003087;color:#fff;padding:8px 16px;border:none;border-radius:4px;cursor:pointer;font-weight:bold;" />
-</form>
+[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?logo=paypal)](https://paypal.me/YOUR_USERNAME)
 
 ---
 
