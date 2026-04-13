@@ -185,7 +185,7 @@ If this project helped you, feel free to buy me a coffee ☕
 | Ko-fi | [![Ko-fi](https://img.shields.io/badge/Ko--fi-ff5e5b?logo=kofi)](https://ko-fi.com/YOUR_USERNAME) |
 | Crypto | USDT (TRC20): `YOUR_WALLET_ADDRESS` |
 
-[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?logo=paypal)](https://paypal.me/YOUR_USERNAME)
+[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?logo=paypal)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4T7LWBH63XQEE)
 
 ---
 
