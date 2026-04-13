@@ -1,0 +1,100 @@
+{
+  "meta": {
+    "language": "English",
+    "code": "en",
+    "version": "1.0.0"
+  },
+  "common": {
+    "loading": "⏳ Processing...",
+    "success": "Success",
+    "cancel": "Cancel",
+    "none": "(none)",
+    "error": "Error: {message}"
+  },
+  "commands": {
+    "status": {
+      "title": "📊 Bot Status",
+      "workDir": "Work Dir: {workDir}",
+      "session": "Session: {sessionId}",
+      "runtime": "Runtime: {runtimeName}",
+      "pendingApprovals": "Pending Approvals: {count}"
+    },
+    "pwd": {
+      "title": "📁 Current Directory: {path}"
+    },
+    "cd": {
+      "notFound": "Directory not found: {path}",
+      "success": "Work directory changed to: {path}\nSession reset. Next message will start a new conversation."
+    },
+    "ls": {
+      "empty": "(empty directory)",
+      "error": "Error: {message}"
+    },
+    "sessions": {
+      "empty": "No sessions found.",
+      "title": "Select a session to switch to:\n{current}"
+    },
+    "new": {
+      "success": "New session started."
+    },
+    "restart": {
+      "message": "Restarting bot..."
+    },
+    "runtime": {
+      "current": "Current runtime: {runtime}\nUsage: /runtime <claude | qwen | opencode>",
+      "switched": "Switched to runtime: {runtime}",
+      "unsupported": "Unsupported runtime. Available: claude, qwen, opencode.",
+      "qwenWarning": "\n\n⚠️ Warning: Qwen uses yolo mode and will automatically approve all operations (Write, Bash, etc.).\nNo Telegram Hook approval. Please be careful.",
+      "opencodeWarning": "\n\n⚠️ OpenCode is still in experimental stage.",
+      "selectPrompt": "Select runtime to switch to:"
+    },
+    "lang": {
+      "current": "Current language: {lang}\nUsage: /lang <zh-TW | zh-CN | en>",
+      "switched": "Language changed to: {lang}",
+      "unsupported": "Unsupported language. Available: zh-TW, zh-CN, en"
+    }
+  },
+  "callbacks": {
+    "approval": {
+      "approved": "✅ Approved\n\n{toolInfo}Params:\n{params}",
+      "denied": "❌ Denied\n\n{toolInfo}Params:\n{params}"
+    },
+    "session": {
+      "switched": "Switched to session: {sessionId}"
+    },
+    "summarize": {
+      "loading": "⏳ Generating summary...",
+      "notFound": "No conversation history found.",
+      "result": "📝 Summary:\n\n{summary}",
+      "error": "Error: {message}",
+      "chunkLabel": "📝 Summary ({current}/{total}):"
+    }
+  },
+  "hooks": {
+    "permission": {
+      "title": "🔐 Permission Request",
+      "tool": "Tool: {tool}",
+      "params": "Params:\n```{params}```",
+      "detail": "{detail}",
+      "fullParams": "Full Params:\n```{params}```",
+      "allowButton": "✅ Allow",
+      "denyButton": "❌ Deny",
+      "toolTypes": {
+        "bash": "Command:",
+        "file": "File:",
+        "notebook": "Notebook:",
+        "read": "Read:",
+        "glob": "Pattern:",
+        "grep": "Grep:"
+      }
+    }
+  },
+  "errors": {
+    "fileNotFound": "File not found: {path}",
+    "permissionDenied": "Permission denied: {path}",
+    "timeout": "Request timeout. Please try again.",
+    "unknown": "Unknown error: {message}",
+    "rateLimit": "⚠️ API rate limit. Please wait 1-2 minutes.",
+    "unauthorized": "You are not authorized to use this bot."
+  }
+}

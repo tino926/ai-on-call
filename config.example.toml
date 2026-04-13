@@ -1,0 +1,32 @@
+# ai-on-call Configuration
+
+[bot]
+# Telegram Bot Token (required)
+token = ""
+
+# Allowed Telegram User ID (required, numeric; 0 = allow anyone)
+allowed_user_id = 0
+
+[runtime]
+# Default AI runtime: "claude", "opencode", "qwen"
+default = "claude"
+
+# Working directory for AI CLI
+work_dir = ""
+
+[hook]
+# TCP server host
+host = "127.0.0.1"
+
+# TCP server port
+port = 9876
+
+# OpenCode hook server port
+opencode_http_port = 3001
+
+# Approval timeout in seconds
+timeout_sec = 300
+
+[logging]
+# Log level: trace, debug, info, warn, error
+level = "info"

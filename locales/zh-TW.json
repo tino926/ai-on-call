@@ -1,0 +1,120 @@
+{
+  "meta": {
+    "language": "繁體中文",
+    "code": "zh-TW",
+    "version": "1.0.0"
+  },
+  "common": {
+    "loading": "⏳ 處理中...",
+    "success": "成功",
+    "cancel": "取消",
+    "none": "(無)",
+    "error": "錯誤：{message}"
+  },
+  "commands": {
+    "status": {
+      "title": "📊 Bot 狀態",
+      "workDir": "工作目錄：{workDir}",
+      "session": "Session: {sessionId}",
+      "runtime": "Runtime: {runtimeName}",
+      "pendingApprovals": "待審批請求：{count}"
+    },
+    "pwd": {
+      "title": "📁 目前工作目錄：{path}"
+    },
+    "cd": {
+      "notFound": "目錄不存在：{path}",
+      "success": "工作目錄已切換到：{path}\nSession 已重置，下一則訊息將開始新對話。"
+    },
+    "ls": {
+      "empty": "(空目錄)",
+      "error": "錯誤：{message}"
+    },
+    "sessions": {
+      "empty": "沒有找到任何 session。",
+      "title": "選擇要切換的 session:\n{current}"
+    },
+    "new": {
+      "success": "已開啟新 session。"
+    },
+    "restart": {
+      "message": "正在重啟 bot..."
+    },
+    "runtime": {
+      "current": "目前 runtime: {runtime}\n用法：/runtime <claude | qwen | opencode>",
+      "switched": "已切換到 runtime: {runtime}",
+      "unsupported": "不支持的 runtime，目前支援 claude、qwen 和 opencode。",
+      "qwenWarning": "\n\n⚠️ 注意：Qwen 使用 yolo mode，會自動批准所有操作（如 Write，Bash 等）。\n沒有 Telegram Hook 審批，請注意安全。",
+      "opencodeWarning": "\n\n⚠️ OpenCode 仍在實驗階段，請見諒。",
+      "selectPrompt": "選擇要切換的 runtime："
+    },
+    "lang": {
+      "current": "目前語言：{lang}\n用法：/lang <zh-TW | zh-CN | en>",
+      "switched": "已切換到語言：{lang}",
+      "unsupported": "不支持的語言，目前支援：zh-TW, zh-CN, en"
+    }
+  },
+  "callbacks": {
+    "approval": {
+      "approved": "✅ Approved\n\n{toolInfo}Params:\n{params}",
+      "denied": "❌ Denied\n\n{toolInfo}Params:\n{params}"
+    },
+    "session": {
+      "switched": "已切換到 session: {sessionId}"
+    },
+    "summarize": {
+      "loading": "⏳ 正在產生摘要...",
+      "notFound": "找不到對話紀錄，無法產生摘要。",
+      "result": "📝 摘要：\n\n{summary}",
+      "error": "錯誤：{message}",
+      "chunkLabel": "📝 摘要 ({current}/{total})："
+    }
+  },
+  "hooks": {
+    "permission": {
+      "title": "🔐 Permission request",
+      "tool": "Tool: {tool}",
+      "params": "Params:\n```{params}```",
+      "detail": "{detail}",
+      "fullParams": "Full Params:\n```{params}```",
+      "allowButton": "✅ Allow",
+      "denyButton": "❌ Deny",
+      "toolTypes": {
+        "bash": "命令：",
+        "file": "檔案：",
+        "notebook": "筆記本：",
+        "read": "讀取：",
+        "glob": "搜尋：",
+        "grep": "Grep:"
+      }
+    }
+  },
+  "errors": {
+    "fileNotFound": "檔案不存在：{path}",
+    "permissionDenied": "無權限存取：{path}",
+    "timeout": "請求超時，請稍後再試",
+    "unknown": "發生未知錯誤：{message}",
+    "rateLimit": "⚠️ API 請求過於頻繁，請稍後再試（建議等待 1-2 分鐘）",
+    "unauthorized": "無權使用此 bot",
+    "botRequired": "Bot token 是必需的"
+  },
+  "config": {
+    "errors": {
+      "fileNotFound": "配置文件不存在：{path}",
+      "parseFailed": "配置文件解析失敗",
+      "validationFailed": "配置驗證失敗：{field} = {value} ({constraint})",
+      "tokenRequired": "Bot token 是必需的",
+      "tokenInvalidLength": "Bot token 長度必須在 {min} 到 {max} 之間",
+      "tokenPlaceholder": "Bot token 看起來是佔位符",
+      "userIdRequired": "Bot allowed_user_id 是必需的",
+      "userIdInvalid": "Bot allowed_user_id 必須是正整數",
+      "runtimeInvalid": "不支援的 runtime：{runtime}。支援的：{supported}",
+      "workDirNotFound": "工作目錄不存在：{path}",
+      "workDirNotWritable": "工作目錄不可寫入：{path}",
+      "portInvalid": "Port 必須在 {min} 到 {max} 之間",
+      "timeoutInvalid": "超時時間必須在 {min} 到 {max} 秒之間",
+      "hostInvalid": "Hook 主機地址無效：{host}",
+      "logLevelInvalid": "無效的日誌級別：{level}"
+    }
+  }
+}

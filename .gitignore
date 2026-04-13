@@ -1,0 +1,73 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+
+# Config (contains secrets)
+config.toml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.iml
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+
+# TypeScript
+*.tsbuildinfo
+
+# Misc
+*.pid
+*.state
+
+# Internal documents (not for public)
+internal/
+
+# User data (language settings, etc.)
+data/
+
+
+
+# Old git repo backup (contains full commit history — sensitive!)
+.git_bak/
+
+# Language-specific README backups
+README.md.bak
+
+
+mnt_projects/
+
+/etc/supervisor/conf.d/ai-on-call.conf
+ai-on-call.supervisor.conf
+
+# AI CLI tool directories and config files (might contain prompt logs local to the repo)
+.qwen/
+.claude/
+AGENTS.md
+CLAUDE.md
+
+# Environment Variables (prevent accidental dotenv leak)
+.env
+.env.*

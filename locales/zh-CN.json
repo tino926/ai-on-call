@@ -1,0 +1,100 @@
+{
+  "meta": {
+    "language": "简体中文",
+    "code": "zh-CN",
+    "version": "1.0.0"
+  },
+  "common": {
+    "loading": "⏳ 处理中...",
+    "success": "成功",
+    "cancel": "取消",
+    "none": "(无)",
+    "error": "错误：{message}"
+  },
+  "commands": {
+    "status": {
+      "title": "📊 Bot 状态",
+      "workDir": "工作目录：{workDir}",
+      "session": "Session: {sessionId}",
+      "runtime": "Runtime: {runtimeName}",
+      "pendingApprovals": "待审批请求：{count}"
+    },
+    "pwd": {
+      "title": "📁 目前工作目录：{path}"
+    },
+    "cd": {
+      "notFound": "目录不存在：{path}",
+      "success": "工作目录已切换到：{path}\nSession 已重置，下一则消息将开始新对话。"
+    },
+    "ls": {
+      "empty": "(空目录)",
+      "error": "错误：{message}"
+    },
+    "sessions": {
+      "empty": "没有找到任何 session。",
+      "title": "选择要切换的 session:\n{current}"
+    },
+    "new": {
+      "success": "已开启新 session。"
+    },
+    "restart": {
+      "message": "正在重启 bot..."
+    },
+    "runtime": {
+      "current": "目前 runtime: {runtime}\n用法：/runtime <claude | qwen | opencode>",
+      "switched": "已切换到 runtime: {runtime}",
+      "unsupported": "不支持的 runtime，目前支持 claude、qwen 和 opencode。",
+      "qwenWarning": "\n\n⚠️ 注意：Qwen 使用 yolo mode，会自动批准所有操作（如 Write，Bash 等）。\n没有 Telegram Hook 审批，请注意安全。",
+      "opencodeWarning": "\n\n⚠️ OpenCode 仍在实验阶段。",
+      "selectPrompt": "选择要切换的 runtime："
+    },
+    "lang": {
+      "current": "目前语言：{lang}\n用法：/lang <zh-TW | zh-CN | en>",
+      "switched": "已切换到语言：{lang}",
+      "unsupported": "不支持的语言，目前支持：zh-TW, zh-CN, en"
+    }
+  },
+  "callbacks": {
+    "approval": {
+      "approved": "✅ Approved\n\n{toolInfo}Params:\n{params}",
+      "denied": "❌ Denied\n\n{toolInfo}Params:\n{params}"
+    },
+    "session": {
+      "switched": "已切换到 session: {sessionId}"
+    },
+    "summarize": {
+      "loading": "⏳ 正在产生摘要...",
+      "notFound": "找不到对话记录，无法产生摘要。",
+      "result": "📝 摘要：\n\n{summary}",
+      "error": "错误：{message}",
+      "chunkLabel": "📝 摘要 ({current}/{total})："
+    }
+  },
+  "hooks": {
+    "permission": {
+      "title": "🔐 Permission request",
+      "tool": "Tool: {tool}",
+      "params": "Params:\n```{params}```",
+      "detail": "{detail}",
+      "fullParams": "Full Params:\n```{params}```",
+      "allowButton": "✅ Allow",
+      "denyButton": "❌ Deny",
+      "toolTypes": {
+        "bash": "命令：",
+        "file": "文件：",
+        "notebook": "笔记本：",
+        "read": "读取：",
+        "glob": "搜索：",
+        "grep": "Grep:"
+      }
+    }
+  },
+  "errors": {
+    "fileNotFound": "文件不存在：{path}",
+    "permissionDenied": "无权限访问：{path}",
+    "timeout": "请求超时，请稍后再试",
+    "unknown": "发生未知错误：{message}",
+    "rateLimit": "⚠️ API 请求过于频繁，请稍后再试（建议等待 1-2 分钟）",
+    "unauthorized": "无权限使用此 bot"
+  }
+}
