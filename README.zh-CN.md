@@ -182,7 +182,7 @@ AI 就会开始工作并回复你。
 | 平台 | 链接 |
 | ---- | ---- |
 <!-- | Buy Me a Coffee | [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?logo=buy-me-a-coffee)](https://buymeacoffee.com/YOUR_USERNAME) | -->
-<!-- | Ko-fi | [![Ko-fi](https://img.shields.io/badge/Ko--fi-ff5e5b?logo=kofi)](https://ko-fi.com/YOUR_USERNAME) | -->
+| Ko-fi | [![Ko-fi](https://img.shields.io/badge/Ko--fi-ff5e5b?logo=kofi)](https://ko-fi.com/tinoplaystuff) |
 <!-- | 加密货币 | USDT (TRC20): `YOUR_WALLET_ADDRESS` | -->
 
 [![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?logo=paypal)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=4T7LWBH63XQEE)
