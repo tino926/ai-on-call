@@ -3,17 +3,31 @@
   "version": "1.0.0",
   "description": "Control AI coding assistants (Claude, OpenCode, Qwen) from Telegram",
   "main": "dist/index.js",
+  "bin": {
+    "ai-on-call": "dist/index.js"
+  },
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "setup": "tsx scripts/setup-config.ts",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
   },
+  "files": [
+    "dist/",
+    "scripts/",
+    "config.example.toml",
+    "README.md",
+    "README.zh-TW.md",
+    "README.zh-CN.md",
+    "locales/"
+  ],
   "keywords": [
     "telegram",
     "bot",

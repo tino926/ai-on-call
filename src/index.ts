@@ -1,4 +1,4 @@
-import { loadConfig, Config } from './config.js';
+import { loadConfig, getCurrentConfigPath, Config } from './config.js';
 import { createBot } from './bot/index.js';
 import { BotState } from './state.js';
 import { HookServer } from './hook-server.js';
@@ -24,6 +24,7 @@ async function main(): Promise<void> {
   logger.level = config.logging.level;
 
   logger.info('Starting ai-on-call...');
+  logger.info(`Config: ${getCurrentConfigPath()}`);
   logger.info(`Work dir: ${config.runtime.workDir}`);
   logger.info(`Default runtime: ${config.runtime.default}`);
   logger.info(`Hook server: ${config.hook.host}:${config.hook.port}`);

@@ -7,6 +7,22 @@ import { ConfigValidator } from './utils/config-validator.js';
 import { ConfigError, ValidationError } from './errors.js';
 import { t, type Language } from './i18n.js';
 
+let currentConfigPath: string | null = null;
+
+function getConfigPaths(): string[] {
+  const paths: string[] = [];
+
+  if (process.env.AI_ON_CALL_CONFIG) {
+    paths.push(process.env.AI_ON_CALL_CONFIG);
+  }
+
+  paths.push(path.join(process.cwd(), 'config.toml'));
+
+  paths.push(path.join(getConfigDir(), 'config.toml'));
+
+  return paths;
+}
+
 export interface BotConfig {
   token: string;
   allowedUserId: number;
@@ -111,7 +127,20 @@ function loadFromToml(filePath: string, lang: Language = 'zh-TW'): Config {
 }
 
 export function loadConfig(lang: Language = 'zh-TW'): Config {
-  const configDir = getConfigDir();
-  const configPath = path.join(configDir, 'config.toml');
-  return loadFromToml(configPath, lang);
+  const paths = getConfigPaths();
+
+  for (const configPath of paths) {
+    if (fs.existsSync(configPath)) {
+      currentConfigPath = configPath;
+      return loadFromToml(configPath, lang);
+    }
+  }
+
+  throw new ConfigError(
+    `Config file not found. Searched:\n${paths.map(p => `  - ${p}`).join('\n')}`
+  );
+}
+
+export function getCurrentConfigPath(): string | null {
+  return currentConfigPath;
 }

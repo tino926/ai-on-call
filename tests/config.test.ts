@@ -4,10 +4,7 @@ import path from 'path';
 import os from 'os';
 
 let tempDir: string;
-
-vi.mock('../src/utils/paths.js', () => ({
-  getConfigDir: vi.fn().mockImplementation(() => tempDir),
-}));
+let originalEnv: typeof process.env;
 
 vi.mock('../src/utils/logger.js', () => ({
   logger: {
@@ -25,16 +22,20 @@ vi.mock('../src/i18n.js', () => ({
   }),
 }));
 
-import { loadConfig } from '../src/config.js';
-import { getConfigDir } from '../src/utils/paths.js';
+import { loadConfig, getCurrentConfigPath } from '../src/config.js';
 
 beforeEach(() => {
   vi.clearAllMocks();
+  originalEnv = { ...process.env };
   tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-on-call-test-'));
+  process.env.AI_ON_CALL_CONFIG = path.join(tempDir, 'config.toml');
 });
 
 afterEach(() => {
-  fs.rmSync(tempDir, { recursive: true, force: true });
+  process.env = originalEnv;
+  if (tempDir && fs.existsSync(tempDir)) {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
 });
 
 afterAll(() => {
@@ -63,7 +64,7 @@ timeout_sec = 300
 [logging]
 level = "info"
 `;
-    fs.writeFileSync(path.join(getConfigDir(), 'config.toml'), configContent);
+    fs.writeFileSync(path.join(tempDir, 'config.toml'), configContent);
 
     const config = loadConfig('zh-TW');
 
@@ -93,10 +94,37 @@ timeout_sec = 300
 [logging]
 level = "info"
 `;
-    fs.writeFileSync(path.join(getConfigDir(), 'config.toml'), configContent);
+    fs.writeFileSync(path.join(tempDir, 'config.toml'), configContent);
 
     const config = loadConfig('zh-TW');
 
     expect(config.runtime.workDir).toBe(process.cwd());
+  });
+
+  it('should return correct config path via getCurrentConfigPath', () => {
+    const configContent = `
+[bot]
+token = "1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
+allowed_user_id = 0
+
+[runtime]
+default = "claude"
+work_dir = "."
+
+[hook]
+host = "127.0.0.1"
+port = 9876
+opencode_http_port = 3001
+timeout_sec = 300
+
+[logging]
+level = "info"
+`;
+    const configPath = path.join(tempDir, 'config.toml');
+    fs.writeFileSync(configPath, configContent);
+
+    loadConfig('zh-TW');
+
+    expect(getCurrentConfigPath()).toBe(configPath);
   });
 });

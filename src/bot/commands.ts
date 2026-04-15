@@ -5,11 +5,13 @@ import { spawn, execSync } from 'child_process';
 import { BotState } from '../state.js';
 import { logger } from '../utils/logger.js';
 import { t, getUserLang, setUserLang } from '../i18n.js';
+import { getCurrentConfigPath } from '../config.js';
 
 export async function handleStatus(ctx: Context, state: BotState): Promise<void> {
   logger.info(`Handling /status command for user ${ctx.from?.id}`);
   const lang = getUserLang(ctx);
-  
+  const configPath = getCurrentConfigPath();
+
   const status = [
     t('commands.status.title', lang),
     '',
@@ -17,7 +19,8 @@ export async function handleStatus(ctx: Context, state: BotState): Promise<void>
     t('commands.status.session', lang, { sessionId: state.sessionId ? state.sessionId.slice(0, 8) : t('common.none', lang) }),
     t('commands.status.runtime', lang, { runtimeName: state.runtimeName }),
     t('commands.status.pendingApprovals', lang, { count: String(state.approvalStore.pendingCount) }),
-  ].join('\n');
+    configPath ? `📄 Config: ${configPath}` : '',
+  ].filter(Boolean).join('\n');
 
   await ctx.reply(status);
 }
