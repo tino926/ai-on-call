@@ -137,7 +137,7 @@ export class ConfigValidator {
 
     if (cfg.host) {
       const host = String(cfg.host);
-      // 使用 net.isIP() 檢查是否為有效 IP，或用 hostname regex 檢查主機名
+      // Check for valid IP using net.isIP(), or validate hostname with regex
       const isValidIp = net.isIP(host) !== 0;
       const hostnameRegex = /^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9]))*$/;
       const isValidHostname = hostnameRegex.test(host);

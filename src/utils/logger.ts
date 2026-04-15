@@ -5,7 +5,7 @@ import { LOG_FILE } from './paths.js';
 
 const { combine, timestamp, printf, colorize } = winston.format;
 
-// 確保日誌目錄存在
+// Ensure logs directory exists
 const logDir = path.dirname(LOG_FILE);
 if (!fs.existsSync(logDir)) {
   try {
@@ -20,7 +20,7 @@ const errorLogFile = path.join(logDir, `${logFilename}-error.log`);
 
 const logFormat = printf(({ level, message, timestamp, label, stack }) => {
   let output = `${timestamp} [${label || 'ai-on-call'}] ${level}: ${message}`;
-  // 如果有 stack（錯誤），添加到輸出
+  // Append stack trace if present
   if (stack) {
     output += `\n${stack}`;
   }
