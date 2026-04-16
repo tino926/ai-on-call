@@ -1,6 +1,7 @@
 import { ClaudeCodeRuntime } from './claude.js';
 import { QwenCodeRuntime } from './qwen.js';
 import { OpenCodeRuntime } from './opencode.js';
+import { GeminiCodeRuntime } from './gemini.js';
 
 export interface ToolCall {
   name: string;
@@ -35,10 +36,12 @@ export function getRuntime(name: string, workDir: string, hookUrl?: string): AiR
       return new QwenCodeRuntime(workDir);
     case 'opencode':
       return new OpenCodeRuntime(workDir, hookUrl || 'http://127.0.0.1:3001');
+    case 'gemini':
+      return new GeminiCodeRuntime(workDir);
     default:
-      throw new Error(`Unsupported runtime: ${name}. Supported: claude, qwen, opencode`);
+      throw new Error(`Unsupported runtime: ${name}. Supported: claude, qwen, opencode, gemini`);
   }
 }
 
 // Re-export for convenience
-export { ClaudeCodeRuntime, QwenCodeRuntime, OpenCodeRuntime };
+export { ClaudeCodeRuntime, QwenCodeRuntime, OpenCodeRuntime, GeminiCodeRuntime };
