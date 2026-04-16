@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getRuntime, ClaudeCodeRuntime, QwenCodeRuntime, OpenCodeRuntime } from '../src/runtime/index.js';
+import { getRuntime, ClaudeCodeRuntime, QwenCodeRuntime, OpenCodeRuntime, GeminiCodeRuntime } from '../src/runtime/index.js';
 
 describe('Runtime', () => {
   describe('getRuntime', () => {
@@ -19,6 +19,12 @@ describe('Runtime', () => {
       const runtime = getRuntime('opencode', '/tmp', 'http://127.0.0.1:3001');
       expect(runtime.name).toBe('opencode');
       expect(runtime).toBeInstanceOf(OpenCodeRuntime);
+    });
+
+    it('應該返回 gemini runtime', () => {
+      const runtime = getRuntime('gemini', '/tmp');
+      expect(runtime.name).toBe('gemini');
+      expect(runtime).toBeInstanceOf(GeminiCodeRuntime);
     });
 
     it('應該在不支援的 runtime 時拋出錯誤', () => {
@@ -51,6 +57,25 @@ describe('Runtime', () => {
       // Read, Glob, Grep 自動批准
       expect(runtime.needsApproval({ name: 'Read', params: '{}' })).toBe(false);
       expect(runtime.needsApproval({ name: 'Glob', params: '{}' })).toBe(false);
+    });
+  });
+
+  describe('GeminiCodeRuntime needsApproval', () => {
+    it('應該在需要審批的工具時返回 true', () => {
+      const runtime = new GeminiCodeRuntime('/tmp');
+
+      // Bash, Write 需要審批
+      expect(runtime.needsApproval({ name: 'Bash', params: '{}' })).toBe(true);
+      expect(runtime.needsApproval({ name: 'Write', params: '{}' })).toBe(true);
+    });
+
+    it('應該在不需要審批的工具時返回 false', () => {
+      const runtime = new GeminiCodeRuntime('/tmp');
+
+      // Read, Glob, Grep, Search, WebFetch 自動批准
+      expect(runtime.needsApproval({ name: 'Read', params: '{}' })).toBe(false);
+      expect(runtime.needsApproval({ name: 'Glob', params: '{}' })).toBe(false);
+      expect(runtime.needsApproval({ name: 'Grep', params: '{}' })).toBe(false);
     });
   });
 });
