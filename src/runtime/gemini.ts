@@ -111,8 +111,8 @@ export class GeminiCodeRuntime implements AiRuntime {
           if (json.response) {
             result = json.response;
           }
-          if (json.sessionId) {
-            newSessionId = json.sessionId;
+          if (json.session_id) {
+            newSessionId = json.session_id;
           }
         } catch {
           // Not JSON, use raw output
