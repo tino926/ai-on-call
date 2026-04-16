@@ -83,6 +83,12 @@ export class GeminiCodeRuntime implements AiRuntime {
       proc.on('close', (code) => {
         clearTimeout(timeoutId);
 
+        if (code !== 0) {
+          logger.warn(`Gemini exited with code ${code}`);
+          reject(new Error(`Gemini 執行失敗 (exit code: ${code})\n${stderr.slice(0, 500)}`));
+          return;
+        }
+
         const rateLimitKeywords = [
           'rate limit',
           'too many requests',
