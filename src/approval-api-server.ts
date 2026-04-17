@@ -92,8 +92,8 @@ export class ApprovalApiServer {
       try {
         const { tool, params, session_id } = JSON.parse(body);
         
-        if (!session_id) {
-          throw new Error('session_id is required');
+        if (typeof session_id !== 'string' || !session_id) {
+          throw new Error('session_id must be a non-empty string');
         }
         
         const id = `${session_id}-${Date.now()}`;
@@ -132,23 +132,24 @@ export class ApprovalApiServer {
         }
 
         try {
+          await this.approvalStore.register(approvalRequest, this.timeoutSec);
+        } catch (error: any) {
+          logger.error(`Failed to register approval request: ${error.message}`);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to register approval request' }));
+          return;
+        }
+
+        try {
           await this.bot.telegram.sendMessage(this.allowedUserId, text, {
             parse_mode: 'Markdown',
             reply_markup: keyboard,
           });
         } catch (error: any) {
           logger.error(`Failed to send approval request: ${error.message}`);
+          this.approvalStore.complete(id, false);
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Failed to send approval request' }));
-          return;
-        }
-
-        try {
-          await this.approvalStore.register(approvalRequest, this.timeoutSec);
-        } catch (error: any) {
-          logger.error(`Failed to register approval request: ${error.message}`);
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Failed to register approval request' }));
           return;
         }
 
