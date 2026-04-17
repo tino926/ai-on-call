@@ -37,6 +37,7 @@ export interface HookConfig {
   host: string;
   port: number;
   opencodeHttpPort: number;
+  approvalApiPort: number;
   timeoutSec: number;
 }
 
@@ -65,6 +66,7 @@ function createConfigFromParsed(parsed: any): Config {
       host: parsed.hook?.host || '127.0.0.1',
       port: parsed.hook?.port || 9876,
       opencodeHttpPort: parsed.hook?.opencode_http_port || 3001,
+      approvalApiPort: parsed.hook?.approval_api_port || 9877,
       timeoutSec: parsed.hook?.timeout_sec || 300,
     },
     logging: {

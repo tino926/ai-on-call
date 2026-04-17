@@ -3,6 +3,7 @@ import { createBot } from './bot/index.js';
 import { BotState } from './state.js';
 import { HookServer } from './hook-server.js';
 import { OpenCodeHookServer } from './opencode-hook-server.js';
+import { ApprovalApiServer } from './approval-api-server.js';
 import { ensureOpenCodePlugin } from './opencode-plugin.js';
 import { ensureDirectories } from './utils/paths.js';
 import { handleStatus, handlePwd, handleCd, handleLs, handleSessions, handleNew, handleRestart, handleRuntime, handleLang } from './bot/commands.js';
@@ -88,6 +89,18 @@ async function main(): Promise<void> {
   await opencodeHookServer.start(bot);
   logger.info(`OpenCode hook server started on port ${config.hook.opencodeHttpPort}`);
 
+  // Start Approval API server for external hook bridges (e.g., Gemini CLI)
+  const approvalApiServer = new ApprovalApiServer(
+    config.hook.host,
+    config.hook.approvalApiPort,
+    config.hook.timeoutSec,
+    config.bot.allowedUserId,
+    state.approvalStore
+  );
+
+  await approvalApiServer.start(bot);
+  logger.info(`Approval API server started on port ${config.hook.approvalApiPort}`);
+
   // Make hookServer accessible for restart
   (global as any).hookServer = hookServer.getServer();
   (global as any).bot = bot;
@@ -106,6 +119,7 @@ async function main(): Promise<void> {
     bot.stop('SIGINT');
     hookServer.getServer().close();
     opencodeHookServer.getServer().close();
+    approvalApiServer.getServer().close();
     process.exit(0);
   });
 
@@ -114,6 +128,7 @@ async function main(): Promise<void> {
     bot.stop('SIGTERM');
     hookServer.getServer().close();
     opencodeHookServer.getServer().close();
+    approvalApiServer.getServer().close();
     process.exit(0);
   });
 }
