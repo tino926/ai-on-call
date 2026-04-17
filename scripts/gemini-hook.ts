@@ -41,7 +41,11 @@ async function waitForApproval(tool: string, params: string): Promise<boolean> {
   const timeoutMs = APPROVAL_TIMEOUT_SEC * 1000;
 
   try {
-    const { id } = await httpRequest('POST', '/api/approval/request', { tool, params });
+    const { id } = await httpRequest('POST', '/api/approval/request', { 
+      tool, 
+      params,
+      session_id: data.session_id || 'unknown'
+    });
 
     while (Date.now() - startTime < timeoutMs) {
       const status = await httpRequest('GET', `/api/approval/${id}/status`);
@@ -67,7 +71,7 @@ async function main(): Promise<void> {
   process.stdin.on('end', async () => {
     try {
       const data = JSON.parse(input);
-      const toolName = (data.tool_name || data.tool || '').toLowerCase();
+      const toolName = (data.tool_name || '').toLowerCase();
 
       if (autoApproveTools.some((t) => toolName.includes(t))) {
         console.log(JSON.stringify({ decision: 'allow' }));
