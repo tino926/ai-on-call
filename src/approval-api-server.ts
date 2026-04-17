@@ -91,6 +91,11 @@ export class ApprovalApiServer {
     req.on('end', async () => {
       try {
         const { tool, params, session_id } = JSON.parse(body);
+        
+        if (!session_id) {
+          throw new Error('session_id is required');
+        }
+        
         const id = `${session_id}-${Date.now()}`;
 
         const approvalRequest: ApprovalRequest = {
@@ -138,7 +143,14 @@ export class ApprovalApiServer {
           return;
         }
 
-        this.approvalStore.register(approvalRequest, this.timeoutSec);
+        try {
+          await this.approvalStore.register(approvalRequest, this.timeoutSec);
+        } catch (error: any) {
+          logger.error(`Failed to register approval request: ${error.message}`);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to register approval request' }));
+          return;
+        }
 
         logger.info(`Approval request created: id=${id}, tool=${approvalRequest.tool}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
