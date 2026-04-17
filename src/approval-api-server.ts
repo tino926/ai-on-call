@@ -147,7 +147,10 @@ export class ApprovalApiServer {
           });
         } catch (error: any) {
           logger.error(`Failed to send approval request: ${error.message}`);
-          this.approvalStore.complete(id, false);
+          const completed = this.approvalStore.complete(id, false);
+          if (!completed) {
+            logger.warn(`Approval request not found when cleaning up: ${id}`);
+          }
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Failed to send approval request' }));
           return;
