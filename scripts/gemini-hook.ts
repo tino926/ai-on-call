@@ -36,7 +36,7 @@ async function httpRequest(method: string, path: string, body?: object): Promise
   });
 }
 
-async function waitForApproval(tool: string, params: string): Promise<boolean> {
+async function waitForApproval(tool: string, params: string, sessionId: string): Promise<boolean> {
   const startTime = Date.now();
   const timeoutMs = APPROVAL_TIMEOUT_SEC * 1000;
 
@@ -44,7 +44,7 @@ async function waitForApproval(tool: string, params: string): Promise<boolean> {
     const { id } = await httpRequest('POST', '/api/approval/request', { 
       tool, 
       params,
-      session_id: data.session_id || 'unknown'
+      session_id: sessionId
     });
 
     while (Date.now() - startTime < timeoutMs) {
@@ -88,13 +88,13 @@ async function main(): Promise<void> {
       const tool = data.tool_name || 'unknown';
       const params = JSON.stringify(data.tool_input || {});
 
-      const approved = await waitForApproval(tool, params);
+      const approved = await waitForApproval(tool, params, data.session_id || 'unknown');
 
       if (approved) {
         console.log(JSON.stringify({ decision: 'allow' }));
         process.exit(0);
       } else {
-        console.log(JSON.stringify({ decision: 'deny', reason: 'User denied this operation' }));
+        console.log(JSON.stringify({ decision: 'deny', reason: 'Approval request timed out or was denied' }));
         process.exit(2);
       }
     } catch (error) {
