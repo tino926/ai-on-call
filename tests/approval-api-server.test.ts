@@ -101,4 +101,43 @@ describe('ApprovalApiServer', () => {
 
     expect(result.approved).toBeNull();
   });
+
+  it('應該處理無效的 JSON', async () => {
+    const server = createServer(18985);
+    await new Promise<void>((resolve) => {
+      server.getServer().listen(18985, '127.0.0.1', () => resolve());
+    });
+
+    const result = await makeRequest_raw(18985, '/api/approval/request', 'POST', 'not valid json');
+
+    expect(result.error).toBeDefined();
+  });
+
+  async function makeRequest_raw(port: number, path: string, method: string, body: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const options = {
+        hostname: '127.0.0.1',
+        port,
+        path,
+        method,
+        headers: { 'Content-Type': 'application/json' },
+      };
+
+      const req = http.request(options, (res) => {
+        let data = '';
+        res.on('data', (chunk) => (data += chunk));
+        res.on('end', () => {
+          try {
+            resolve(JSON.parse(data));
+          } catch {
+            resolve({ error: 'parse error' });
+          }
+        });
+      });
+
+      req.on('error', reject);
+      req.write(body);
+      req.end();
+    });
+  }
 });
