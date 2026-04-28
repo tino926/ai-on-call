@@ -11,7 +11,7 @@ export class ConfigValidator {
   private static readonly MAX_PORT = 65535;
   private static readonly MIN_TIMEOUT = 30;
   private static readonly MAX_TIMEOUT = 3600;
-  private static readonly VALID_RUNTIMES = ['claude', 'qwen', 'opencode'] as const;
+  private static readonly VALID_RUNTIMES = ['claude', 'qwen', 'opencode', 'gemini'] as const;
   private static readonly VALID_LOG_LEVELS = ['trace', 'debug', 'info', 'warn', 'error'] as const;
 
   /**
@@ -163,9 +163,13 @@ export class ConfigValidator {
       this.validatePort(cfg.port, 'hook.port', 'TCP server port');
     }
 
-    if (cfg.opencode_http_port !== undefined && cfg.opencode_http_port !== null) {
-      this.validatePort(cfg.opencode_http_port, 'hook.opencode_http_port', 'OpenCode HTTP server port');
-    }
+if (cfg.opencode_http_port !== undefined && cfg.opencode_http_port !== null) {
+        this.validatePort(cfg.opencode_http_port, 'hook.opencode_http_port', 'OpenCode HTTP server port');
+      }
+
+      if (cfg.approval_api_port !== undefined && cfg.approval_api_port !== null) {
+        this.validatePort(cfg.approval_api_port, 'hook.approval_api_port', 'Approval API server port');
+      }
 
     if (cfg.timeout_sec !== undefined && cfg.timeout_sec !== null) {
       if (typeof cfg.timeout_sec !== 'number') {
