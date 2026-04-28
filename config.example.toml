@@ -8,7 +8,7 @@ token = ""
 allowed_user_id = 0
 
 [runtime]
-# Default AI runtime: "claude", "opencode", "qwen"
+# Default AI runtime: "claude", "opencode", "qwen", "gemini"
 default = "claude"
 
 # Working directory for AI CLI
@@ -18,11 +18,14 @@ work_dir = ""
 # TCP server host
 host = "127.0.0.1"
 
-# TCP server port
+# TCP server port (for Claude Code)
 port = 9876
 
 # OpenCode hook server port
 opencode_http_port = 3001
+
+# Approval API server port (for Gemini CLI)
+approval_api_port = 9877
 
 # Approval timeout in seconds
 timeout_sec = 300
