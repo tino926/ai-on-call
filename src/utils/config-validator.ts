@@ -163,7 +163,7 @@ export class ConfigValidator {
       this.validatePort(cfg.port, 'hook.port', 'TCP server port');
     }
 
-if (cfg.opencode_http_port !== undefined && cfg.opencode_http_port !== null) {
+    if (cfg.opencode_http_port !== undefined && cfg.opencode_http_port !== null) {
         this.validatePort(cfg.opencode_http_port, 'hook.opencode_http_port', 'OpenCode HTTP server port');
       }
 
