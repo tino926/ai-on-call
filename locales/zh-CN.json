@@ -41,11 +41,12 @@
       "message": "正在重启 bot..."
     },
     "runtime": {
-      "current": "目前 runtime: {runtime}\n用法：/runtime <claude | qwen | opencode>",
+      "current": "目前 runtime: {runtime}\n用法：/runtime <claude | qwen | opencode | gemini>",
       "switched": "已切换到 runtime: {runtime}",
-      "unsupported": "不支持的 runtime，目前支持 claude、qwen 和 opencode。",
+      "unsupported": "不支持的 runtime，目前支持 claude、qwen、opencode 和 gemini。",
       "qwenWarning": "\n\n⚠️ 注意：Qwen 使用 yolo mode，会自动批准所有操作（如 Write，Bash 等）。\n没有 Telegram Hook 审批，请注意安全。",
       "opencodeWarning": "\n\n⚠️ OpenCode 仍在实验阶段。",
+      "geminiWarning": "\n\n⚠️ Gemini 仍需通过 Hook 审批工具执行。",
       "selectPrompt": "选择要切换的 runtime："
     },
     "lang": {

@@ -214,6 +214,9 @@ export async function handleRuntime(ctx: Context, state: BotState): Promise<void
     if (runtime === 'opencode') {
       message += t('commands.runtime.opencodeWarning', lang);
     }
+    if (runtime === 'gemini') {
+      message += t('commands.runtime.geminiWarning', lang);
+    }
     await ctx.reply(message);
   } else {
     await ctx.reply(t('commands.runtime.unsupported', lang));

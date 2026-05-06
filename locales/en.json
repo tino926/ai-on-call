@@ -41,11 +41,12 @@
       "message": "Restarting bot..."
     },
     "runtime": {
-      "current": "Current runtime: {runtime}\nUsage: /runtime <claude | qwen | opencode>",
+      "current": "Current runtime: {runtime}\nUsage: /runtime <claude | qwen | opencode | gemini>",
       "switched": "Switched to runtime: {runtime}",
-      "unsupported": "Unsupported runtime. Available: claude, qwen, opencode.",
+      "unsupported": "Unsupported runtime. Available: claude, qwen, opencode, gemini.",
       "qwenWarning": "\n\n⚠️ Warning: Qwen uses yolo mode and will automatically approve all operations (Write, Bash, etc.).\nNo Telegram Hook approval. Please be careful.",
       "opencodeWarning": "\n\n⚠️ OpenCode is still in experimental stage.",
+      "geminiWarning": "\n\n⚠️ Gemini still requires Hook approval for tool execution.",
       "selectPrompt": "Select runtime to switch to:"
     },
     "lang": {
