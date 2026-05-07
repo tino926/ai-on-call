@@ -8,6 +8,7 @@
   - [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
   - [OpenCode](https://github.com/opencode-ai/opencode)
   - [Qwen Code](https://qwenlm.github.io/)
+  - [Gemini CLI](https://github.com/google-gemini/gemini-cli)
 
 ## 安裝方式
 
@@ -127,6 +128,12 @@ sudo systemctl start ai-on-call
 
 1. 確認 `TELEGRAM_BOT_HOOK=1` 環境變數已設定
 2. 檢查 `bot.log` 查看錯誤訊息
+
+### Gemini CLI 審批沒反應
+
+1. 確認 `scripts/gemini-hook.ts` 已正確編譯
+2. 確認 `.gemini/settings.json` 有設定 Command Hook
+3. 確認 Approval API Server 正常啟動（預設 port 9877）
 
 ## 卸載
 
