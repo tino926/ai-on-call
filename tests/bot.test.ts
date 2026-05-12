@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { handleStatus, handlePwd, handleCd, handleLs } from '../src/bot/commands.js';
 import { handleMessage } from '../src/bot/handlers.js';
+import { handleCallback } from '../src/bot/callbacks.js';
 import { BotState } from '../src/state.js';
 import { logger } from '../src/utils/logger.js';
 
@@ -87,6 +88,75 @@ describe('Bot Commands', () => {
 
       expect(mockCtx.reply).toHaveBeenCalled();
     });
+  });
+});
+
+describe('handleRuntimeCallback', () => {
+  const createMockCallbackCtx = (callbackData: string, fromId: number = 123456) => ({
+    answerCbQuery: vi.fn().mockResolvedValue(true),
+    editMessageText: vi.fn().mockResolvedValue(true),
+    callbackQuery: {
+      data: callbackData,
+      message: { text: 'test' },
+    },
+    from: { id: fromId },
+  });
+
+  const mockConfig = {
+    bot: { token: 'test', allowedUserId: 123456 },
+    runtime: { default: 'claude', workDir: '.' },
+    hook: { host: '127.0.0.1', port: 9876, opencodeHttpPort: 3001, approvalApiPort: 9877, timeoutSec: 300 },
+    logging: { level: 'info' },
+  };
+
+  it('應該切換到 claude runtime', async () => {
+    const state = new BotState(mockConfig);
+    const ctx = createMockCallbackCtx('runtime:claude');
+
+    await handleCallback(ctx as any, state);
+
+    expect(state.runtimeName).toBe('claude');
+    expect(ctx.answerCbQuery).toHaveBeenCalled();
+  });
+
+  it('應該切換到 qwen runtime', async () => {
+    const state = new BotState(mockConfig);
+    const ctx = createMockCallbackCtx('runtime:qwen');
+
+    await handleCallback(ctx as any, state);
+
+    expect(state.runtimeName).toBe('qwen');
+    expect(ctx.answerCbQuery).toHaveBeenCalled();
+  });
+
+  it('應該切換到 opencode runtime', async () => {
+    const state = new BotState(mockConfig);
+    const ctx = createMockCallbackCtx('runtime:opencode');
+
+    await handleCallback(ctx as any, state);
+
+    expect(state.runtimeName).toBe('opencode');
+    expect(ctx.answerCbQuery).toHaveBeenCalled();
+  });
+
+  it('應該切換到 gemini runtime', async () => {
+    const state = new BotState(mockConfig);
+    const ctx = createMockCallbackCtx('runtime:gemini');
+
+    await handleCallback(ctx as any, state);
+
+    expect(state.runtimeName).toBe('gemini');
+    expect(ctx.answerCbQuery).toHaveBeenCalled();
+  });
+
+  it('應該拒絕不支援的 runtime', async () => {
+    const state = new BotState(mockConfig);
+    const ctx = createMockCallbackCtx('runtime:invalid');
+
+    await handleCallback(ctx as any, state);
+
+    expect(state.runtimeName).toBe('claude');
+    expect(ctx.answerCbQuery).toHaveBeenCalledWith(expect.stringContaining('不支持'));
   });
 });
 
