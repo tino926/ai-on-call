@@ -1,15 +1,5 @@
 const MAX_CHUNK_LENGTH = 4000;
 
-function lastIndexOfAny(text: string, positions: number[], start: number, end: number): number {
-  let result = -1;
-  for (const pos of positions) {
-    if (pos >= start && pos < end && pos > result) {
-      result = pos;
-    }
-  }
-  return result;
-}
-
 export function splitMessage(text: string): string[] {
   if (text.length <= MAX_CHUNK_LENGTH) {
     return [text];
@@ -47,7 +37,7 @@ export function splitMessage(text: string): string[] {
   if (chunks.length > 1) {
     const total = chunks.length;
     for (let i = 0; i < chunks.length; i++) {
-      chunks[i] = chunks[i] + `\n\n_(${i + 1}/${total})_`;
+      chunks[i] = chunks[i] + `\n\n(${i + 1}/${total})`;
     }
   }
 
