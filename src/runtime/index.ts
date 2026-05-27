@@ -20,7 +20,7 @@ export interface AiRuntime {
     prompt: string,
     workDir: string,
     sessionId?: string,
-    imagePath?: string
+    imagePaths?: string[]
   ): Promise<RuntimeOutput>;
   needsApproval(toolCall: ToolCall): boolean;
 }

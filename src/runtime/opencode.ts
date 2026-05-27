@@ -30,7 +30,7 @@ export class OpenCodeRuntime implements AiRuntime {
     prompt: string,
     _workDir: string,
     sessionId?: string,
-    imagePath?: string
+    imagePaths?: string[]
   ): Promise<RuntimeOutput> {
     await this.waitForRateLimit();
     
@@ -47,8 +47,10 @@ export class OpenCodeRuntime implements AiRuntime {
       logger.info(`Using session: ${sessionId}`);
     }
 
-    if (imagePath) {
-      args.push('--file', imagePath);
+    if (imagePaths) {
+      for (const p of imagePaths) {
+        args.push('--file', p);
+      }
     }
 
     args.push(prompt);

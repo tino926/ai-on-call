@@ -88,6 +88,181 @@ describe('Runtime', () => {
     });
   });
 
+  describe('ClaudeCodeRuntime execute', () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('應該在無圖片時不使用 --file 參數', async () => {
+      const runtime = new ClaudeCodeRuntime('/test/workdir');
+      const mockProc = {
+        stdout: { on: vi.fn((event, cb) => { if (event === 'data') cb(Buffer.from('{}')); }) },
+        stderr: { on: vi.fn() },
+        on: vi.fn(),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+      mockProc.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'close') cb(0);
+      });
+
+      await runtime.execute('test prompt', '/test/workdir');
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      expect(spawn).toHaveBeenCalledWith(
+        'claude',
+        expect.not.arrayContaining(['--file']),
+        expect.any(Object)
+      );
+    });
+
+    it('應該在單張圖片時使用一個 --file 參數', async () => {
+      const runtime = new ClaudeCodeRuntime('/test/workdir');
+      const mockProc = {
+        stdout: { on: vi.fn((event, cb) => { if (event === 'data') cb(Buffer.from('{}')); }) },
+        stderr: { on: vi.fn() },
+        on: vi.fn(),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+      mockProc.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'close') cb(0);
+      });
+
+      await runtime.execute('test prompt', '/test/workdir', undefined, ['/tmp/img1.jpg']);
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      const spawnCall = (spawn as any).mock.calls[0];
+      const args = spawnCall[1];
+      expect(args).toContain('--file');
+      expect(args[args.indexOf('--file') + 1]).toBe('/tmp/img1.jpg');
+    });
+
+    it('應該在多張圖片時使用多個 --file 參數', async () => {
+      const runtime = new ClaudeCodeRuntime('/test/workdir');
+      const mockProc = {
+        stdout: { on: vi.fn((event, cb) => { if (event === 'data') cb(Buffer.from('{}')); }) },
+        stderr: { on: vi.fn() },
+        on: vi.fn(),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+      mockProc.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'close') cb(0);
+      });
+
+      await runtime.execute('test prompt', '/test/workdir', undefined, ['/tmp/img1.jpg', '/tmp/img2.jpg']);
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      const spawnCall = (spawn as any).mock.calls[0];
+      const args = spawnCall[1];
+      const fileFlags = args.filter((a: string) => a === '--file').length;
+      expect(fileFlags).toBe(2);
+      expect(args).toContain('/tmp/img1.jpg');
+      expect(args).toContain('/tmp/img2.jpg');
+    });
+  });
+
+  describe('QwenCodeRuntime execute', () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('應該在無圖片時不使用 --file 參數', async () => {
+      const runtime = new QwenCodeRuntime('/test/workdir');
+      const mockProc = {
+        stdout: { on: vi.fn() },
+        stderr: { on: vi.fn() },
+        on: vi.fn(),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+      mockProc.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'close') cb(0);
+      });
+
+      await runtime.execute('test prompt', '/test/workdir');
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      expect(spawn).toHaveBeenCalledWith(
+        'qwen',
+        expect.not.arrayContaining(['--file']),
+        expect.any(Object)
+      );
+    });
+
+    it('應該在多張圖片時使用多個 --file 參數', async () => {
+      const runtime = new QwenCodeRuntime('/test/workdir');
+      const mockProc = {
+        stdout: { on: vi.fn() },
+        stderr: { on: vi.fn() },
+        on: vi.fn(),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+      mockProc.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'close') cb(0);
+      });
+
+      await runtime.execute('test prompt', '/test/workdir', undefined, ['/tmp/a.jpg', '/tmp/b.jpg', '/tmp/c.jpg']);
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      const spawnCall = (spawn as any).mock.calls[0];
+      const args = spawnCall[1];
+      expect(args.filter((a: string) => a === '--file').length).toBe(3);
+    });
+  });
+
+  describe('OpenCodeRuntime execute', () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('應該在無圖片時不使用 --file 參數', async () => {
+      const runtime = new OpenCodeRuntime('/test/workdir', 'http://127.0.0.1:3001');
+      const mockProc = {
+        stdout: { on: vi.fn() },
+        stderr: { on: vi.fn() },
+        on: vi.fn(),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+      mockProc.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'close') cb(0);
+      });
+
+      await runtime.execute('test prompt', '/test/workdir');
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      expect(spawn).toHaveBeenCalledWith(
+        'opencode',
+        expect.not.arrayContaining(['--file']),
+        expect.any(Object)
+      );
+    });
+
+    it('應該在多張圖片時使用多個 --file 參數', async () => {
+      const runtime = new OpenCodeRuntime('/test/workdir', 'http://127.0.0.1:3001');
+      const mockProc = {
+        stdout: { on: vi.fn() },
+        stderr: { on: vi.fn() },
+        on: vi.fn(),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+      mockProc.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'close') cb(0);
+      });
+
+      await runtime.execute('test prompt', '/test/workdir', undefined, ['/tmp/x.jpg', '/tmp/y.jpg']);
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      const spawnCall = (spawn as any).mock.calls[0];
+      const args = spawnCall[1];
+      expect(args.filter((a: string) => a === '--file').length).toBe(2);
+    });
+  });
+
   describe('GeminiCodeRuntime execute', () => {
     beforeEach(() => {
       vi.clearAllMocks();
@@ -176,6 +351,29 @@ describe('Runtime', () => {
       (spawn as any).mockReturnValue(mockProc);
 
       await expect(runtime.execute('test', '/tmp')).rejects.toThrow('請求過於頻繁');
+    });
+
+    it('應該忽略 imagePaths 參數（不支援 --file）', async () => {
+      const runtime = new GeminiCodeRuntime('/test/workdir');
+      const mockProc = {
+        stdout: { on: vi.fn((event, cb) => { if (event === 'data') cb(Buffer.from('{}')); }) },
+        stderr: { on: vi.fn() },
+        on: vi.fn(),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+      mockProc.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'close') cb(0);
+      });
+
+      await runtime.execute('test prompt', '/test/workdir', undefined, ['/tmp/img1.jpg', '/tmp/img2.jpg']);
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      expect(spawn).toHaveBeenCalledWith(
+        'gemini',
+        ['-p', 'test prompt', '--output-format', 'json'],
+        expect.any(Object)
+      );
     });
   });
 });

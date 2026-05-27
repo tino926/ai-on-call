@@ -7,6 +7,15 @@ import { logger } from '../utils/logger.js';
 import { t, getUserLang } from '../i18n.js';
 import { splitMessage } from '../utils/message-splitter.js';
 
+interface MediaGroupBuffer {
+  paths: string[];
+  caption: string;
+  timer: ReturnType<typeof setTimeout>;
+}
+
+const mediaGroupBuffers = new Map<string, MediaGroupBuffer>();
+const MEDIA_GROUP_TIMEOUT_MS = 2000;
+
 export async function handleMessage(ctx: Context, state: BotState): Promise<void> {
   const text = (ctx.message as any).text;
   if (!text) return;
@@ -19,6 +28,7 @@ export async function handlePhoto(ctx: Context, state: BotState): Promise<void> 
   const message = ctx.message as any;
   const photo = message.photo?.[message.photo.length - 1];
   const caption = message.caption || '請描述這張圖片';
+  const mediaGroupId = message.media_group_id as string | undefined;
 
   if (!photo) return;
 
@@ -31,22 +41,54 @@ export async function handlePhoto(ctx: Context, state: BotState): Promise<void> 
 
     const tmpPath = path.join('/tmp', `${photo.file_id}_${Date.now()}.jpg`);
     const fileUrl = `https://api.telegram.org/file/bot${ctx.telegram.token}/${file.file_path}`;
-    
+
     const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
     fs.writeFileSync(tmpPath, response.data);
 
-    await sendToRuntime(ctx, state, caption, tmpPath);
+    if (mediaGroupId) {
+      const existing = mediaGroupBuffers.get(mediaGroupId);
+      if (existing) {
+        clearTimeout(existing.timer);
+        existing.paths.push(tmpPath);
+        if (message.caption) existing.caption = message.caption;
+        existing.timer = setTimeout(() => {
+          processMediaGroup(ctx, state, mediaGroupId);
+        }, MEDIA_GROUP_TIMEOUT_MS);
+      } else {
+        const timer = setTimeout(() => {
+          processMediaGroup(ctx, state, mediaGroupId);
+        }, MEDIA_GROUP_TIMEOUT_MS);
+        mediaGroupBuffers.set(mediaGroupId, {
+          paths: [tmpPath],
+          caption,
+          timer,
+        });
+      }
+    } else {
+      await sendToRuntime(ctx, state, caption, [tmpPath]);
+    }
   } catch (error: any) {
     logger.error(`Failed to process photo: ${error.message}`);
     await ctx.reply(t('errors.unknown', lang, { message: error.message }));
   }
 }
 
+async function processMediaGroup(ctx: Context, state: BotState, mediaGroupId: string): Promise<void> {
+  const buffer = mediaGroupBuffers.get(mediaGroupId);
+  if (!buffer) return;
+
+  mediaGroupBuffers.delete(mediaGroupId);
+
+  if (buffer.paths.length === 0) return;
+
+  await sendToRuntime(ctx, state, buffer.caption, buffer.paths);
+}
+
 async function sendToRuntime(
   ctx: Context,
   state: BotState,
   prompt: string,
-  imagePath?: string
+  imagePaths?: string[]
 ): Promise<void> {
   const lang = getUserLang(ctx);
 
@@ -57,17 +99,16 @@ async function sendToRuntime(
 
   const status = state.sessionId ? 'Continuing session' : 'New session';
   const truncated = prompt.length > 100 ? prompt.slice(0, 100) + '...' : prompt;
-  
+
   const statusMessage = await ctx.reply(`${status}: ${truncated}\n\n${t('common.loading', lang)}`);
 
-  // Run in background to avoid blocking handler
   const chatId = ctx.chat?.id;
   const messageId = statusMessage.message_id;
 
   runtimeExecuteInBackground(
     state,
     prompt,
-    imagePath,
+    imagePaths,
     chatId,
     messageId,
     ctx
@@ -79,14 +120,13 @@ async function sendToRuntime(
 async function runtimeExecuteInBackground(
   state: BotState,
   prompt: string,
-  imagePath: string | undefined,
+  imagePaths: string[] | undefined,
   chatId: number | undefined,
   messageId: number,
   ctx: Context
 ): Promise<void> {
   const lang = getUserLang(ctx);
-  
-  // Send typing indicator
+
   const typingInterval = setInterval(() => {
     if (chatId) {
       ctx.telegram.sendChatAction(chatId, 'typing').catch(() => {});
@@ -99,7 +139,7 @@ async function runtimeExecuteInBackground(
       prompt,
       state.workDir,
       state.sessionId,
-      imagePath
+      imagePaths
     );
 
     if (result.sessionId) {
@@ -108,7 +148,6 @@ async function runtimeExecuteInBackground(
 
     const output = result.stdout || result.stderr || t('common.none', lang);
 
-    // Delete the "processing" message and send response
     try {
       await ctx.telegram.deleteMessage(chatId!, messageId);
     } catch {
@@ -120,9 +159,9 @@ async function runtimeExecuteInBackground(
     }
   } catch (error: any) {
     logger.error(`Runtime error: ${error.message}`);
-    
+
     const isRateLimit = error.message.includes('過於頻繁') || error.message.includes('rate limit');
-    const errorText = isRateLimit 
+    const errorText = isRateLimit
       ? t('errors.rateLimit', lang)
       : t('common.error', lang, { message: error.message });
 
@@ -138,8 +177,14 @@ async function runtimeExecuteInBackground(
     }
   } finally {
     clearInterval(typingInterval);
-    if (imagePath && fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
+    if (imagePaths) {
+      for (const p of imagePaths) {
+        try {
+          if (fs.existsSync(p)) fs.unlinkSync(p);
+        } catch {
+          // Ignore cleanup errors
+        }
+      }
     }
   }
 }

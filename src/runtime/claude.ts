@@ -28,7 +28,7 @@ export class ClaudeCodeRuntime implements AiRuntime {
     prompt: string,
     _workDir: string,
     sessionId?: string,
-    imagePath?: string
+    imagePaths?: string[]
   ): Promise<RuntimeOutput> {
     // Wait for rate limit
     await this.waitForRateLimit();
@@ -52,8 +52,10 @@ export class ClaudeCodeRuntime implements AiRuntime {
       args.push('--resume', sessionId);
     }
 
-    if (imagePath) {
-      args.push('--file', imagePath);
+    if (imagePaths) {
+      for (const p of imagePaths) {
+        args.push('--file', p);
+      }
     }
 
     logger.info(`Executing Claude with args: -p ${prompt.slice(0, 50)}...`);

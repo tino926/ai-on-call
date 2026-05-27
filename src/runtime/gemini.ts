@@ -27,7 +27,7 @@ export class GeminiCodeRuntime implements AiRuntime {
     prompt: string,
     _workDir: string,
     sessionId?: string,
-    _imagePath?: string
+    _imagePaths?: string[]
   ): Promise<RuntimeOutput> {
     await this.waitForRateLimit();
 
