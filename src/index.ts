@@ -7,7 +7,7 @@ import { ApprovalApiServer } from './approval-api-server.js';
 import { ensureOpenCodePlugin } from './opencode-plugin.js';
 import { ensureDirectories } from './utils/paths.js';
 import { handleStatus, handlePwd, handleCd, handleLs, handleSessions, handleNew, handleRestart, handleRuntime, handleLang } from './bot/commands.js';
-import { handleMessage, handlePhoto } from './bot/handlers.js';
+import { handleMessage, handlePhoto, cleanupMediaGroupBuffers } from './bot/handlers.js';
 import { handleCallback } from './bot/callbacks.js';
 import { logger } from './utils/logger.js';
 
@@ -116,6 +116,7 @@ async function main(): Promise<void> {
   // Handle graceful shutdown
   process.once('SIGINT', () => {
     logger.info('Shutting down...');
+    cleanupMediaGroupBuffers();
     bot.stop('SIGINT');
     hookServer.getServer().close();
     opencodeHookServer.getServer().close();
@@ -125,6 +126,7 @@ async function main(): Promise<void> {
 
   process.once('SIGTERM', () => {
     logger.info('Shutting down...');
+    cleanupMediaGroupBuffers();
     bot.stop('SIGTERM');
     hookServer.getServer().close();
     opencodeHookServer.getServer().close();

@@ -52,11 +52,15 @@ export async function handlePhoto(ctx: Context, state: BotState): Promise<void> 
         existing.paths.push(tmpPath);
         if (message.caption) existing.caption = message.caption;
         existing.timer = setTimeout(() => {
-          processMediaGroup(ctx, state, mediaGroupId);
+          processMediaGroup(ctx, state, mediaGroupId).catch(err => {
+            logger.error(`Media group processing error: ${err.message}`);
+          });
         }, MEDIA_GROUP_TIMEOUT_MS);
       } else {
         const timer = setTimeout(() => {
-          processMediaGroup(ctx, state, mediaGroupId);
+          processMediaGroup(ctx, state, mediaGroupId).catch(err => {
+            logger.error(`Media group processing error: ${err.message}`);
+          });
         }, MEDIA_GROUP_TIMEOUT_MS);
         mediaGroupBuffers.set(mediaGroupId, {
           paths: [tmpPath],
@@ -187,4 +191,18 @@ async function runtimeExecuteInBackground(
       }
     }
   }
+}
+
+export function cleanupMediaGroupBuffers(): void {
+  for (const [id, buffer] of mediaGroupBuffers) {
+    clearTimeout(buffer.timer);
+    for (const p of buffer.paths) {
+      try {
+        if (fs.existsSync(p)) fs.unlinkSync(p);
+      } catch {
+        // Ignore cleanup errors
+      }
+    }
+  }
+  mediaGroupBuffers.clear();
 }
