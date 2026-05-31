@@ -49,7 +49,7 @@ Whether you're on your phone or away from your computer, just send a message to 
 
 ### Settings
 
-- `/runtime [name]` — Switch AI (claude / qwen / opencode)
+- `/runtime [name]` — Switch AI (claude / qwen / opencode / gemini)
 - `/lang [code]` — Change language
 
 ---

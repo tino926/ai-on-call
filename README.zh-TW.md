@@ -119,11 +119,11 @@ npm start    # 生產模式
 - `ToolSearch` — 工具搜尋
 
 **Gemini CLI:**
-- `read`, `readfile` — 讀檔
-- `glob`, `globtool` — 搜尋檔案
-- `grep`, `greptool` — 搜尋內容
-- `search` — 工具搜尋
-- `webfetch` — 網頁擷取
+- `Read` — 讀檔
+- `Glob` — 搜尋檔案
+- `Grep` — 搜尋內容
+- `Search` — 搜尋
+- `WebFetch` — 網頁擷取
 
 ---
 
