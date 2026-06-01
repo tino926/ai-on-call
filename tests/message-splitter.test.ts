@@ -53,9 +53,22 @@ describe('splitMessage', () => {
     expect(result[0]).not.toMatch(/\(\d+\/\d+\)/);
   });
 
-  it('should handle unicode characters', () => {
+  it('should handle CJK characters', () => {
     const long = '你好世界'.repeat(1200);
     const result = splitMessage(long);
     expect(result.length).toBeGreaterThanOrEqual(2);
+    for (const chunk of result) {
+      expect(chunk).not.toMatch(/\uFFFD/); // no replacement characters
+    }
+  });
+
+  it('should handle emoji surrogate pairs without breakage', () => {
+    const emoji = '😀🎉🚀💯🌟';
+    const long = emoji.repeat(800);
+    const result = splitMessage(long);
+    expect(result.length).toBeGreaterThanOrEqual(2);
+    for (const chunk of result) {
+      expect(chunk).not.toMatch(/\uFFFD/);
+    }
   });
 });

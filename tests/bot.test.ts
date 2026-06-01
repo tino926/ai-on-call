@@ -117,9 +117,12 @@ describe('handleRuntimeCallback', () => {
 
     expect(state.runtimeName).toBe('claude');
     expect(ctx.answerCbQuery).toHaveBeenCalled();
+    const message = ctx.answerCbQuery.mock.calls[0][0];
+    expect(message).toContain('claude');
+    expect(message).not.toContain('yolo mode');
   });
 
-  it('應該切換到 qwen runtime', async () => {
+  it('應該切換到 qwen runtime（含 qwen 警告）', async () => {
     const state = new BotState(mockConfig);
     const ctx = createMockCallbackCtx('runtime:qwen');
 
@@ -127,9 +130,11 @@ describe('handleRuntimeCallback', () => {
 
     expect(state.runtimeName).toBe('qwen');
     expect(ctx.answerCbQuery).toHaveBeenCalled();
+    const message = ctx.answerCbQuery.mock.calls[0][0];
+    expect(message).toContain('yolo mode');
   });
 
-  it('應該切換到 opencode runtime', async () => {
+  it('應該切換到 opencode runtime（含 opencode 警告）', async () => {
     const state = new BotState(mockConfig);
     const ctx = createMockCallbackCtx('runtime:opencode');
 
@@ -137,9 +142,11 @@ describe('handleRuntimeCallback', () => {
 
     expect(state.runtimeName).toBe('opencode');
     expect(ctx.answerCbQuery).toHaveBeenCalled();
+    const message = ctx.answerCbQuery.mock.calls[0][0];
+    expect(message).toContain('實驗階段');
   });
 
-  it('應該切換到 gemini runtime', async () => {
+  it('應該切換到 gemini runtime（含 gemini 警告）', async () => {
     const state = new BotState(mockConfig);
     const ctx = createMockCallbackCtx('runtime:gemini');
 
@@ -147,6 +154,8 @@ describe('handleRuntimeCallback', () => {
 
     expect(state.runtimeName).toBe('gemini');
     expect(ctx.answerCbQuery).toHaveBeenCalled();
+    const message = ctx.answerCbQuery.mock.calls[0][0];
+    expect(message).toContain('Hook 審批');
   });
 
   it('應該拒絕不支援的 runtime', async () => {

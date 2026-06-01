@@ -191,6 +191,28 @@ describe('Runtime', () => {
       );
     });
 
+    it('應該在單張圖片時使用一個 --file 參數', async () => {
+      const runtime = new QwenCodeRuntime('/test/workdir');
+      const mockProc = {
+        stdout: { on: vi.fn() },
+        stderr: { on: vi.fn() },
+        on: vi.fn(),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+      mockProc.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'close') cb(0);
+      });
+
+      await runtime.execute('test prompt', '/test/workdir', undefined, ['/tmp/single.jpg']);
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      const spawnCall = (spawn as any).mock.calls[0];
+      const args = spawnCall[1];
+      expect(args.filter((a: string) => a === '--file').length).toBe(1);
+      expect(args).toContain('/tmp/single.jpg');
+    });
+
     it('應該在多張圖片時使用多個 --file 參數', async () => {
       const runtime = new QwenCodeRuntime('/test/workdir');
       const mockProc = {
@@ -239,6 +261,28 @@ describe('Runtime', () => {
         expect.not.arrayContaining(['--file']),
         expect.any(Object)
       );
+    });
+
+    it('應該在單張圖片時使用一個 --file 參數', async () => {
+      const runtime = new OpenCodeRuntime('/test/workdir', 'http://127.0.0.1:3001');
+      const mockProc = {
+        stdout: { on: vi.fn() },
+        stderr: { on: vi.fn() },
+        on: vi.fn(),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+      mockProc.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'close') cb(0);
+      });
+
+      await runtime.execute('test prompt', '/test/workdir', undefined, ['/tmp/single.jpg']);
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      const spawnCall = (spawn as any).mock.calls[0];
+      const args = spawnCall[1];
+      expect(args.filter((a: string) => a === '--file').length).toBe(1);
+      expect(args).toContain('/tmp/single.jpg');
     });
 
     it('應該在多張圖片時使用多個 --file 參數', async () => {
