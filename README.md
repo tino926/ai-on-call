@@ -1,5 +1,10 @@
 # ai-on-call
 
+[![Test](https://github.com/tino926/ai-on-call/actions/workflows/test.yml/badge.svg)](https://github.com/tino926/ai-on-call/actions/workflows/test.yml)
+[![npm](https://img.shields.io/npm/v/ai-on-call)](https://www.npmjs.com/package/ai-on-call)
+[![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 Control AI coding assistants from anywhere via chat messages.
 
 ---
