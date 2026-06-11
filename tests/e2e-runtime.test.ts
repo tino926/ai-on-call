@@ -1,7 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
-import { spawn, execSync } from 'child_process';
+import { describe, it, expect } from 'vitest';
+import { spawn } from 'child_process';
 import * as fs from 'fs';
-import * as path from 'path';
 
 describe('Runtime integration (real spawn)', () => {
 
@@ -61,12 +60,15 @@ describe('Runtime integration (real spawn)', () => {
     await expect(new Promise<void>((resolve, reject) => {
       const proc = spawn('sleep', ['10'], {
         stdio: ['ignore', 'pipe', 'pipe'],
-        detached: true,
       });
       const timeoutId = setTimeout(() => {
-        try {
-          if (proc.pid) process.kill(-proc.pid, 'SIGKILL');
-        } catch { /* ignore */ }
+        if (proc.pid) {
+          try {
+            proc.kill('SIGKILL');
+          } catch {
+            // Process already exited
+          }
+        }
         reject(new Error(`Timeout after ${timeoutMs}ms`));
       }, timeoutMs);
       proc.on('close', () => { clearTimeout(timeoutId); resolve(); });
@@ -77,7 +79,7 @@ describe('Runtime integration (real spawn)', () => {
     expect(elapsed).toBeGreaterThanOrEqual(timeoutMs - 100);
   });
 
-  it('should detect rate limit keywords in stderr', async () => {
+  it('should capture rate limit keywords via stderr', async () => {
     const rateLimitKeywords = [
       'rate limit',
       'too many requests',
@@ -96,14 +98,12 @@ describe('Runtime integration (real spawn)', () => {
         proc.on('close', () => resolve({ stderr }));
         proc.on('error', reject);
       });
-      const stderrLower = result.stderr.toLowerCase();
-      const detected = rateLimitKeywords.some(kw => stderrLower.includes(kw));
-      expect(detected).toBe(true);
+      expect(result.stderr.toLowerCase()).toContain(keyword);
     }
   });
 
   it('should respect the cwd option', async () => {
-    const tmpDir = execSync('mktemp -d').toString().trim();
+    const tmpDir = fs.mkdtempSync('/tmp/e2e-test-');
     try {
       const result = await new Promise<{ stdout: string }>((resolve, reject) => {
         const proc = spawn('pwd', [], {
@@ -139,7 +139,7 @@ describe('Runtime integration (real spawn)', () => {
   it('should handle large stdout output without truncation', async () => {
     const size = 100 * 1024;
     const result = await new Promise<{ stdout: string }>((resolve, reject) => {
-      const proc = spawn('bash', ['-c', `dd if=/dev/zero bs=1 count=${size} 2>/dev/null | tr '\\0' 'A'`], {
+      const proc = spawn('bash', ['-c', `dd if=/dev/zero bs=1024 count=100 2>/dev/null | tr '\\0' 'A'`], {
         stdio: ['ignore', 'pipe', 'pipe'],
       });
       let stdout = '';
