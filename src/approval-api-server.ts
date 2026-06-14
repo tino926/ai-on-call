@@ -75,8 +75,8 @@ export class ApprovalApiServer {
       return;
     }
 
-    if (req.method === 'GET' && url.pathname.startsWith('/api/approval/')) {
-      const id = url.pathname.replace('/api/approval/', '');
+    if (req.method === 'GET' && url.pathname.startsWith('/api/approval/') && url.pathname.endsWith('/status')) {
+      const id = url.pathname.slice('/api/approval/'.length, -'/status'.length);
       await this.handleApprovalStatus(req, res, id);
       return;
     }
@@ -132,29 +132,20 @@ export class ApprovalApiServer {
         }
 
         try {
-          await this.approvalStore.register(approvalRequest, this.timeoutSec);
-        } catch (error: any) {
-          logger.error(`Failed to register approval request: ${error.message}`);
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Failed to register approval request' }));
-          return;
-        }
-
-        try {
           await this.bot.telegram.sendMessage(this.allowedUserId, text, {
             parse_mode: 'Markdown',
             reply_markup: keyboard,
           });
         } catch (error: any) {
           logger.error(`Failed to send approval request: ${error.message}`);
-          const completed = this.approvalStore.complete(id, false);
-          if (!completed) {
-            logger.warn(`Approval request not found when cleaning up: ${id}`);
-          }
           res.writeHead(500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Failed to send approval request' }));
           return;
         }
+
+        this.approvalStore.register(approvalRequest, this.timeoutSec).catch((error: any) => {
+          logger.error(`Background approval registration error: ${error.message}`);
+        });
 
         logger.info(`Approval request created: id=${id}, tool=${approvalRequest.tool}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
