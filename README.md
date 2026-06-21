@@ -59,6 +59,7 @@ Whether you're on your phone or away from your computer, just send a message to 
 | AI | Features |
 |---|----------|
 | **Claude Code** | Most powerful for coding, full permission approval |
+| **Gemini CLI** | Fast, Google ecosystem, full permission approval |
 | **Qwen Code** | Fast, auto-approves all operations |
 | **OpenCode** | Multiple models, cost-effective |
 
@@ -146,6 +147,7 @@ AI will start working and reply.
 +------------------+
 | Claude / Qwen   |
 | / OpenCode      |
+| / Gemini        |
 +------------------+
 ```
 
@@ -165,7 +167,8 @@ AI will start working and reply.
 - [x] Claude Runtime
 - [x] Qwen Runtime
 - [x] OpenCode Runtime
-- [x] Permission approval (Claude, OpenCode)
+- [x] Gemini Runtime
+- [x] Permission approval (Claude, OpenCode, Gemini)
 - [x] i18n support
 
 ### In Progress

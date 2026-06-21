@@ -110,11 +110,20 @@ npm start    # 生產模式
 ### 自動放行的工具
 
 以下工具不需要審批：
+
+**Claude Code:**
 - `Read` — 讀檔
 - `Glob` — 搜尋檔案
 - `Grep` — 搜尋內容
 - `Agent` — 子代理探索
 - `ToolSearch` — 工具搜尋
+
+**Gemini CLI:**
+- `read`, `readfile` — 讀檔
+- `glob`, `globtool` — 搜尋檔案
+- `grep`, `greptool` — 搜尋內容
+- `search` — 工具搜尋
+- `webfetch` — 網頁擷取
 
 ---
 
