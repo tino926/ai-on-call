@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { spawn } from 'child_process';
 import { BotState } from '../src/state.js';
 import { handleMessage } from '../src/bot/handlers.js';
+import { getRuntime } from '../src/runtime/index.js';
 import type { AiRuntime, RuntimeOutput, ToolCall } from '../src/runtime/index.js';
 
 vi.mock('../src/runtime/index.js', () => ({
@@ -27,6 +28,18 @@ class TestRuntime implements AiRuntime {
   }
 
   needsApproval(_toolCall: ToolCall): boolean {
+    return false;
+  }
+}
+
+class FailingTestRuntime implements AiRuntime {
+  name = 'failing';
+
+  async execute(): Promise<RuntimeOutput> {
+    throw new Error('Runtime execution failed');
+  }
+
+  needsApproval(): boolean {
     return false;
   }
 }
@@ -101,5 +114,29 @@ describe('E2E: Bot handler pipeline (real spawn)', () => {
     }, { timeout: 5000, interval: 50 });
 
     expect(ctx.reply.mock.calls[0][0]).toContain('Continuing session');
+  });
+
+  it('should return early for empty message text', async () => {
+    const emptyCtx = createMockCtx(123456, '');
+    await handleMessage(emptyCtx, state);
+
+    expect(emptyCtx.reply).not.toHaveBeenCalled();
+  });
+
+  it('should handle runtime execution errors', async () => {
+    vi.mocked(getRuntime).mockReturnValueOnce(new FailingTestRuntime());
+
+    await handleMessage(ctx, state);
+
+    await vi.waitFor(() => {
+      expect(ctx.telegram.editMessageText).toHaveBeenCalled();
+    }, { timeout: 5000, interval: 50 });
+
+    expect(ctx.telegram.editMessageText).toHaveBeenCalledWith(
+      123456,
+      1,
+      undefined,
+      expect.stringContaining('Runtime execution failed'),
+    );
   });
 });
