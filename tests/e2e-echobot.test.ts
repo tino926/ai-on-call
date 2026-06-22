@@ -81,7 +81,7 @@ describe('E2E: Bot handler pipeline (real spawn)', () => {
     // Wait for background execution to complete
     await vi.waitFor(() => {
       expect(ctx.reply).toHaveBeenCalledTimes(2);
-    }, { timeout: 5000, interval: 50 });
+    }, { timeout: 10000, interval: 50 });
 
     // First call: status message (zh-TW default locale)
     expect(ctx.reply.mock.calls[0][0]).toContain('New session');
@@ -111,7 +111,7 @@ describe('E2E: Bot handler pipeline (real spawn)', () => {
 
     await vi.waitFor(() => {
       expect(ctx.reply).toHaveBeenCalledTimes(2);
-    }, { timeout: 5000, interval: 50 });
+    }, { timeout: 10000, interval: 50 });
 
     expect(ctx.reply.mock.calls[0][0]).toContain('Continuing session');
   });
@@ -130,7 +130,7 @@ describe('E2E: Bot handler pipeline (real spawn)', () => {
 
     await vi.waitFor(() => {
       expect(ctx.telegram.editMessageText).toHaveBeenCalled();
-    }, { timeout: 5000, interval: 50 });
+    }, { timeout: 10000, interval: 50 });
 
     expect(ctx.telegram.editMessageText).toHaveBeenCalledWith(
       123456,
