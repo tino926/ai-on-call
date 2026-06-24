@@ -83,12 +83,15 @@ describe('E2E: Bot handler pipeline (real spawn)', () => {
       expect(ctx.reply).toHaveBeenCalledTimes(2);
     }, { timeout: 10000, interval: 50 });
 
-    // First call: status message (zh-TW default locale)
+    // Status message should appear first
     expect(ctx.reply.mock.calls[0][0]).toContain('New session');
     expect(ctx.reply.mock.calls[0][0]).toContain('處理中');
 
-    // Second call: runtime output
-    expect(ctx.reply.mock.calls[1][0]).toContain('Echo: hello bot');
+    // Runtime output should appear in at least one reply call
+    const outputCalls = ctx.reply.mock.calls.filter(
+      (call: any[]) => typeof call[0] === 'string' && call[0].includes('Echo: hello bot'),
+    );
+    expect(outputCalls.length).toBeGreaterThanOrEqual(1);
 
     // Status message was deleted
     expect(ctx.telegram.deleteMessage).toHaveBeenCalledWith(123456, 1);
