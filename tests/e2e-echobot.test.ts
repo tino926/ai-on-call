@@ -61,6 +61,8 @@ function createMockCtx(chatId = 123456, messageText = '') {
 describe('E2E: Bot handler pipeline (real spawn)', () => {
   let state: BotState;
   let ctx: any;
+  let intervalIds: ReturnType<typeof setInterval>[];
+  const origSetInterval = global.setInterval.bind(global);
 
   const mockConfig = {
     bot: { token: 'test', allowedUserId: 123456 },
@@ -73,6 +75,18 @@ describe('E2E: Bot handler pipeline (real spawn)', () => {
     vi.clearAllMocks();
     state = new BotState(mockConfig as any);
     ctx = createMockCtx(123456, 'hello bot');
+    intervalIds = [];
+    global.setInterval = ((fn: any, ms: any, ...args: any[]) => {
+      const id = origSetInterval(fn, ms, ...args);
+      intervalIds.push(id);
+      return id;
+    }) as typeof global.setInterval;
+  });
+
+  afterEach(() => {
+    intervalIds.forEach((id) => clearInterval(id));
+    intervalIds = [];
+    global.setInterval = origSetInterval;
   });
 
   it('should process a message through the full pipeline', async () => {
