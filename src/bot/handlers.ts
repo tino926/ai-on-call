@@ -6,6 +6,7 @@ import { BotState } from '../state.js';
 import { logger } from '../utils/logger.js';
 import { t, getUserLang } from '../i18n.js';
 import { splitMessage } from '../utils/message-splitter.js';
+import { retryWithBackoff, isRateLimitError } from '../utils/retry.js';
 
 interface MediaGroupBuffer {
   paths: string[];
@@ -139,11 +140,13 @@ async function runtimeExecuteInBackground(
 
   try {
     const runtime = state.getRuntime();
-    const result = await runtime.execute(
-      prompt,
-      state.workDir,
-      state.sessionId,
-      imagePaths
+    const result = await retryWithBackoff(
+      () => runtime.execute(
+        prompt,
+        state.workDir,
+        state.sessionId,
+        imagePaths
+      ),
     );
 
     if (result.sessionId) {
@@ -164,7 +167,7 @@ async function runtimeExecuteInBackground(
   } catch (error: any) {
     logger.error(`Runtime error: ${error.message}`);
 
-    const isRateLimit = error.message.includes('過於頻繁') || error.message.includes('rate limit');
+    const isRateLimit = isRateLimitError(error.message);
     const errorText = isRateLimit
       ? t('errors.rateLimit', lang)
       : t('common.error', lang, { message: error.message });
