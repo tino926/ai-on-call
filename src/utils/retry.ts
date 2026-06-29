@@ -36,7 +36,7 @@ export async function retryWithBackoff<T>(
       return await fn();
     } catch (error: any) {
       lastError = error;
-      if (attempt >= options.maxRetries || !isRateLimitError(error.message)) {
+      if (attempt >= options.maxRetries || !isRateLimitError(error?.message ?? '')) {
         throw error;
       }
       const delay = Math.min(
@@ -47,5 +47,5 @@ export async function retryWithBackoff<T>(
     }
   }
 
-  throw lastError ?? new Error('retryWithBackoff: unexpected exit');
+  throw lastError;
 }
