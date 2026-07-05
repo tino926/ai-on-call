@@ -1,28 +1,14 @@
 import { spawn } from 'child_process';
 import { AiRuntime, RuntimeOutput, ToolCall } from './index.js';
 import { logger } from '../utils/logger.js';
+import { createRateLimitState, waitForRateLimit, setupProcessTimeout, checkRateLimitError } from '../utils/runtime.js';
 
 export class ClaudeCodeRuntime implements AiRuntime {
   readonly name = 'claude';
-  
-  // Rate limiting per instance
-  private lastRequestTime: number = 0;
-  private readonly MIN_REQUEST_INTERVAL_MS = 5000; // 5 seconds between requests
+
+  private rateLimitState = createRateLimitState();
 
   constructor(private workDir: string) {}
-
-  private async waitForRateLimit(): Promise<void> {
-    const now = Date.now();
-    const timeSinceLastRequest = now - this.lastRequestTime;
-    
-    if (timeSinceLastRequest < this.MIN_REQUEST_INTERVAL_MS) {
-      const waitTime = this.MIN_REQUEST_INTERVAL_MS - timeSinceLastRequest;
-      logger.info(`Rate limiting: waiting ${waitTime}ms...`);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
-    }
-    
-    this.lastRequestTime = Date.now();
-  }
 
   async execute(
     prompt: string,
@@ -30,12 +16,10 @@ export class ClaudeCodeRuntime implements AiRuntime {
     sessionId?: string,
     imagePaths?: string[]
   ): Promise<RuntimeOutput> {
-    // Wait for rate limit
-    await this.waitForRateLimit();
-    
-    // Use instance workDir if no workDir provided
+    await waitForRateLimit(this.rateLimitState);
+
     const actualWorkDir = _workDir || this.workDir;
-    
+
     const args = [
       '-p',
       prompt,
@@ -43,8 +27,6 @@ export class ClaudeCodeRuntime implements AiRuntime {
       '20',
       '--output-format',
       'json',
-      // Always use --dangerously-skip-permissions with IS_SANDBOX=1
-      // This is required for hook approval to work
       '--dangerously-skip-permissions',
     ];
 
@@ -68,7 +50,6 @@ export class ClaudeCodeRuntime implements AiRuntime {
           ...process.env,
           CLAUDECODE: '',
           TELEGRAM_BOT_HOOK: '1',
-          // Always set IS_SANDBOX=1 to allow --dangerously-skip-permissions in containers
           IS_SANDBOX: '1',
         },
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -87,43 +68,19 @@ export class ClaudeCodeRuntime implements AiRuntime {
         logger.debug(`Claude stderr: ${data.toString().slice(0, 200)}`);
       });
 
-      // Timeout after 60 seconds for summary requests, 10 minutes for normal requests
       const isSummaryRequest = prompt.includes('摘要');
       const timeoutMs = isSummaryRequest ? 60000 : 600000;
-      
-      const timeoutId = setTimeout(() => {
-        logger.warn(`Claude execution timeout after ${timeoutMs}ms`);
-        try {
-          if (proc.pid) {
-            process.kill(-proc.pid, 'SIGKILL');
-          }
-        } catch (e) {
-          // Ignore errors
-        }
-        reject(new Error(`Claude execution timeout (${timeoutMs/1000} seconds)`));
-      }, timeoutMs);
+
+      const { clear: clearTimeout } = setupProcessTimeout(proc, timeoutMs, 'Claude', () => {
+        reject(new Error(`Claude execution timeout (${timeoutMs / 1000} seconds)`));
+      });
 
       proc.on('close', (_code) => {
-        clearTimeout(timeoutId);
-        
-        // Check for rate limit errors in stderr
-        const rateLimitKeywords = [
-          'rate limit',
-          'too many requests',
-          '429',
-          'quota exceeded',
-          'request limit',
-          'throttl',
-        ];
-        
-        const stderrLower = stderr.toLowerCase();
-        const isRateLimitError = rateLimitKeywords.some(keyword => 
-          stderrLower.includes(keyword)
-        );
-        
-        if (isRateLimitError) {
-          logger.warn('Rate limit detected');
-          reject(new Error('⚠️ Claude API 請求過於頻繁，請稍後再試（建議等待 1-2 分鐘）'));
+        clearTimeout();
+
+        const rateLimitError = checkRateLimitError(stderr, 'Claude');
+        if (rateLimitError) {
+          reject(new Error(rateLimitError));
           return;
         }
         
@@ -185,7 +142,7 @@ export class ClaudeCodeRuntime implements AiRuntime {
       });
 
       proc.on('error', (err) => {
-        clearTimeout(timeoutId);
+        clearTimeout();
         reject(err);
       });
     });

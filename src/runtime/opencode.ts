@@ -1,30 +1,17 @@
 import { spawn } from 'child_process';
 import { AiRuntime, RuntimeOutput, ToolCall } from './index.js';
 import { logger } from '../utils/logger.js';
+import { createRateLimitState, waitForRateLimit, setupProcessTimeout, checkRateLimitError } from '../utils/runtime.js';
 
 export class OpenCodeRuntime implements AiRuntime {
   readonly name = 'opencode';
-  
-  private lastRequestTime: number = 0;
-  private readonly MIN_REQUEST_INTERVAL_MS = 5000;
+
+  private rateLimitState = createRateLimitState();
 
   constructor(
     private workDir: string,
     private hookUrl: string,
   ) {}
-
-  private async waitForRateLimit(): Promise<void> {
-    const now = Date.now();
-    const timeSinceLastRequest = now - this.lastRequestTime;
-    
-    if (timeSinceLastRequest < this.MIN_REQUEST_INTERVAL_MS) {
-      const waitTime = this.MIN_REQUEST_INTERVAL_MS - timeSinceLastRequest;
-      logger.info(`Rate limiting: waiting ${waitTime}ms...`);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
-    }
-    
-    this.lastRequestTime = Date.now();
-  }
 
   async execute(
     prompt: string,
@@ -32,10 +19,10 @@ export class OpenCodeRuntime implements AiRuntime {
     sessionId?: string,
     imagePaths?: string[]
   ): Promise<RuntimeOutput> {
-    await this.waitForRateLimit();
-    
+    await waitForRateLimit(this.rateLimitState);
+
     const actualWorkDir = _workDir || this.workDir;
-    
+
     const args = [
       'run',
       '--format', 'json',
@@ -83,39 +70,17 @@ export class OpenCodeRuntime implements AiRuntime {
       });
 
       const timeoutMs = 600000;
-      
-      const timeoutId = setTimeout(() => {
-        logger.warn(`OpenCode execution timeout after ${timeoutMs}ms`);
-        try {
-          if (proc.pid) {
-            process.kill(-proc.pid, 'SIGKILL');
-          }
-        } catch (e) {
-          // Ignore errors
-        }
-        reject(new Error(`OpenCode execution timeout (${timeoutMs/1000} seconds)`));
-      }, timeoutMs);
+
+      const { clear: clearTimeout } = setupProcessTimeout(proc, timeoutMs, 'OpenCode', () => {
+        reject(new Error(`OpenCode execution timeout (${timeoutMs / 1000} seconds)`));
+      });
 
       proc.on('close', (code) => {
-        clearTimeout(timeoutId);
-        
-        const rateLimitKeywords = [
-          'rate limit',
-          'too many requests',
-          '429',
-          'quota exceeded',
-          'request limit',
-          'throttl',
-        ];
-        
-        const stderrLower = stderr.toLowerCase();
-        const isRateLimitError = rateLimitKeywords.some(keyword => 
-          stderrLower.includes(keyword)
-        );
-        
-        if (isRateLimitError) {
-          logger.warn('Rate limit detected');
-          reject(new Error('⚠️ OpenCode API 請求過於頻繁，請稍後再試（建議等待 1-2 分鐘）'));
+        clearTimeout();
+
+        const rateLimitError = checkRateLimitError(stderr, 'OpenCode');
+        if (rateLimitError) {
+          reject(new Error(rateLimitError));
           return;
         }
 
@@ -179,7 +144,7 @@ export class OpenCodeRuntime implements AiRuntime {
       });
 
       proc.on('error', (err) => {
-        clearTimeout(timeoutId);
+        clearTimeout();
         reject(err);
       });
     });
