@@ -54,6 +54,7 @@ cp config.example.toml config.toml
 | `npm run dev` | Run with hot-reload (tsx watch) |
 | `npm run build` | Compile TypeScript to dist/ |
 | `npm run start` | Run compiled dist/index.js |
+| `npm run setup` | Run setup-config script |
 | `npm test` | Run tests in watch mode |
 | `npm run test:run` | Run tests once |
 | `npm run test:coverage` | Run tests with coverage |
@@ -63,7 +64,7 @@ cp config.example.toml config.toml
 ### CI Workflows
 
 - **test.yml** — lint → typecheck → test (Node 20/22 matrix) on push/PR to `main`/`develop`
-- **build.yml** — test → typecheck → lint → build → npm publish on version tags (`v*`)
+- **build.yml** — test → typecheck → lint → build → npm publish on version tags (`v*`); also runs on PR to `main` (for verification)
 
 ---
 
@@ -100,6 +101,8 @@ ai-on-call/
 │       └── paths.ts             # Path utilities
 ├── tests/
 │   ├── setup.ts                 # Global test setup (mock logger, fetch)
+│   ├── fixtures/
+│   │   └── config.valid.toml    # Valid config fixture for tests
 │   ├── runtime.test.ts          # Unit: runtime (24 tests)
 │   ├── bot.test.ts              # Unit: bot handlers (13 tests)
 │   ├── e2e-runtime.test.ts      # E2E: real spawn runtime (8 tests)
@@ -114,7 +117,12 @@ ai-on-call/
 ├── locales/
 │   ├── zh-TW.json / zh-CN.json / en.json
 ├── scripts/
-│   └── gemini-hook.ts           # Gemini CLI hook bridge script
+│   ├── gemini-hook.ts           # Gemini CLI hook bridge script
+│   ├── setup-config.ts          # Config setup wizard
+│   ├── check-config.ts          # Config validation check
+│   └── opencode-plugin/        # OpenCode hook plugin files
+│       ├── install.sh
+│       └── telegram-hook.js
 ├── config.example.toml
 ├── vitest.config.ts
 └── tsconfig.json
@@ -147,12 +155,18 @@ ai-on-call/
 
 ### Runtime Implementation
 
-Each AI CLI runtime lives in `src/runtime/` and implements the `AiRuntime` interface:
+Each AI CLI runtime lives in `src/runtime/` and implements the `AiRuntime` interface (defined in `src/runtime/index.ts`):
 
 ```typescript
 export interface AiRuntime {
-  execute(input: string, images?: string[]): Promise<string>;
-  kill(): void;
+  name: string;
+  execute(
+    prompt: string,
+    workDir: string,
+    sessionId?: string,
+    imagePaths?: string[]
+  ): Promise<RuntimeOutput>;
+  needsApproval(toolCall: ToolCall): boolean;
 }
 ```
 
