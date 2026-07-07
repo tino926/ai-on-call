@@ -7,9 +7,16 @@ import { t } from './i18n.js';
 type Language = 'zh-TW' | 'zh-CN' | 'en';
 const DEFAULT_LANG: Language = 'zh-TW';
 
+interface CompletedEntry {
+  approved: boolean;
+  timestamp: number;
+}
+
 interface ApprovalStatus {
   approved: boolean | null;
 }
+
+const COMPLETED_CLEANUP_TTL_MS = 10 * 60 * 1000;
 
 export class ApprovalApiServer {
   private server: http.Server;
@@ -19,7 +26,7 @@ export class ApprovalApiServer {
   private allowedUserId: number;
   private lang: Language = DEFAULT_LANG;
   private bot!: Telegraf;
-  private completed: Map<string, boolean> = new Map();
+  private completed: Map<string, CompletedEntry> = new Map();
 
   constructor(
     host: string,
@@ -47,11 +54,13 @@ export class ApprovalApiServer {
     this.bot = bot;
 
     this.approvalStore.on('complete', ({ requestId, approved }) => {
-      this.completed.set(requestId, approved);
+      this.completed.set(requestId, { approved, timestamp: Date.now() });
+      this.cleanupCompleted();
     });
 
     this.approvalStore.on('timeout', (request) => {
-      this.completed.set(request.id, false);
+      this.completed.set(request.id, { approved: false, timestamp: Date.now() });
+      this.cleanupCompleted();
     });
 
     return new Promise((resolve, reject) => {
@@ -164,11 +173,21 @@ export class ApprovalApiServer {
     if (this.approvalStore.exists(id)) {
       status.approved = null;
     } else if (this.completed.has(id)) {
-      status.approved = this.completed.get(id) ?? null;
+      status.approved = this.completed.get(id)!.approved;
     }
 
+    this.cleanupCompleted();
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(status));
+  }
+
+  private cleanupCompleted(): void {
+    const cutoff = Date.now() - COMPLETED_CLEANUP_TTL_MS;
+    for (const [id, entry] of this.completed.entries()) {
+      if (entry.timestamp < cutoff) {
+        this.completed.delete(id);
+      }
+    }
   }
 
   private parseToolDetail(tool: string, params: string): string | null {
