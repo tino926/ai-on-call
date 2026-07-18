@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getRuntime, ClaudeCodeRuntime, QwenCodeRuntime, OpenCodeRuntime, GeminiCodeRuntime, type ToolCall } from '../src/runtime/index.js';
+import { getRuntime, ClaudeCodeRuntime, QwenCodeRuntime, OpenCodeRuntime, GeminiCodeRuntime, AntigravityRuntime, type ToolCall } from '../src/runtime/index.js';
 import { spawn } from 'child_process';
 
 vi.mock('child_process', () => ({
@@ -30,6 +30,12 @@ describe('Runtime', () => {
       const runtime = getRuntime('gemini', '/tmp');
       expect(runtime.name).toBe('gemini');
       expect(runtime).toBeInstanceOf(GeminiCodeRuntime);
+    });
+
+    it('應該返回 antigravity runtime', () => {
+      const runtime = getRuntime('antigravity', '/tmp');
+      expect(runtime.name).toBe('antigravity');
+      expect(runtime).toBeInstanceOf(AntigravityRuntime);
     });
 
     it('應該在不支援的 runtime 時拋出錯誤', () => {
@@ -85,6 +91,116 @@ describe('Runtime', () => {
       expect(runtime.needsApproval({ name: 'Grep', params: '{}' })).toBe(false);
       expect(runtime.needsApproval({ name: 'Search', params: '{}' })).toBe(false);
       expect(runtime.needsApproval({ name: 'WebFetch', params: '{}' })).toBe(false);
+    });
+  });
+
+  describe('AntigravityRuntime needsApproval', () => {
+    it('應該在需要審批的工具時返回 true', () => {
+      const runtime = new AntigravityRuntime('/tmp');
+      expect(runtime.needsApproval({ name: 'Bash', params: '{}' })).toBe(true);
+      expect(runtime.needsApproval({ name: 'Write', params: '{}' })).toBe(true);
+      expect(runtime.needsApproval({ name: 'Edit', params: '{}' })).toBe(true);
+    });
+
+    it('應該在不需要審批的工具時返回 false', () => {
+      const runtime = new AntigravityRuntime('/tmp');
+      expect(runtime.needsApproval({ name: 'Read', params: '{}' })).toBe(false);
+      expect(runtime.needsApproval({ name: 'Glob', params: '{}' })).toBe(false);
+      expect(runtime.needsApproval({ name: 'Grep', params: '{}' })).toBe(false);
+      expect(runtime.needsApproval({ name: 'Search', params: '{}' })).toBe(false);
+      expect(runtime.needsApproval({ name: 'WebFetch', params: '{}' })).toBe(false);
+    });
+  });
+
+  describe('AntigravityRuntime execute', () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('應該使用正確的參數呼叫 agy CLI', async () => {
+      const mockProc = {
+        stdout: { on: vi.fn() },
+        stderr: { on: vi.fn() },
+        on: vi.fn(),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+      mockProc.stdout.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'data') cb(Buffer.from('response output'));
+      });
+      mockProc.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'close') cb(0);
+      });
+
+      const runtime = new AntigravityRuntime('/test/workdir');
+      const result = await runtime.execute('test prompt', '/test/workdir');
+
+      expect(result.stdout).toBe('response output');
+      expect(spawn).toHaveBeenCalledWith('agy', ['-p', 'test prompt'], expect.objectContaining({
+        cwd: '/test/workdir',
+      }));
+    });
+
+    it('應該在有 conversationId 時使用 --conversation 參數', async () => {
+      const mockProc = {
+        stdout: { on: vi.fn() },
+        stderr: { on: vi.fn() },
+        on: vi.fn(),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+      mockProc.stdout.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'data') cb(Buffer.from('response'));
+      });
+      mockProc.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'close') cb(0);
+      });
+
+      const runtime = new AntigravityRuntime('/test/workdir');
+      await runtime.execute('test prompt', '/test/workdir', 'conv-123');
+
+      expect(spawn).toHaveBeenCalledWith('agy', ['-p', 'test prompt', '--conversation', 'conv-123'], expect.anything());
+    });
+
+    it('應該在遇到 rate limit 時拋出錯誤', async () => {
+      const mockProc = {
+        stdout: { on: vi.fn() },
+        stderr: { on: vi.fn() },
+        on: vi.fn(),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+      mockProc.stderr.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'data') cb(Buffer.from('rate limit exceeded'));
+      });
+      mockProc.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'close') cb(0);
+      });
+
+      const runtime = new AntigravityRuntime('/test/workdir');
+      await expect(runtime.execute('test prompt', '/test/workdir')).rejects.toThrow('過於頻繁');
+    });
+
+    it('應該忽略 imagePaths 參數（不支援）', async () => {
+      const mockProc = {
+        stdout: { on: vi.fn() },
+        stderr: { on: vi.fn() },
+        on: vi.fn(),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+      mockProc.stdout.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'data') cb(Buffer.from('result'));
+      });
+      mockProc.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'close') cb(0);
+      });
+
+      const runtime = new AntigravityRuntime('/test/workdir');
+      await runtime.execute('test prompt', '/test/workdir', undefined, ['/tmp/img.jpg']);
+
+      const args = (spawn as any).mock.calls[0][1] as string[];
+      expect(args).not.toContain('--file');
     });
   });
 
