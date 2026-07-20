@@ -128,7 +128,7 @@ export class ApprovalApiServer {
           ? approvalRequest.params.slice(0, 500) + '...'
           : approvalRequest.params;
 
-        const title = `🔮 Gemini ${t('hooks.permission.title', this.lang)}`;
+        const title = `🔮 ${t('hooks.permission.title', this.lang)}`;
         const toolLabel = t('hooks.permission.tool', this.lang, { tool: approvalRequest.tool });
 
         let text: string;
