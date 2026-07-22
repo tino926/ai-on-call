@@ -72,13 +72,12 @@ export class AntigravityRuntime implements AiRuntime {
           return;
         }
 
-        let newSessionId: string | undefined;
         const result = stdout.trim();
 
         resolve({
           stdout: result,
           stderr,
-          sessionId: newSessionId || sessionId,
+          sessionId,
         });
       });
 
