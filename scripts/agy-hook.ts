@@ -6,7 +6,7 @@ const HOOK_SERVER_HOST = process.env.HOOK_SERVER_HOST || '127.0.0.1';
 const HOOK_SERVER_PORT = parseInt(process.env.HOOK_SERVER_PORT || '9877', 10);
 const APPROVAL_TIMEOUT_SEC = parseInt(process.env.APPROVAL_TIMEOUT_SEC || '300', 10);
 
-const autoApproveTools = ['read', 'glob', 'grep', 'search', 'webfetch', 'view_file', 'list_dir'];
+const autoApproveTools = ['read', 'glob', 'grep', 'search', 'webfetch'];
 
 async function httpRequest(method: string, path: string, body?: object): Promise<any> {
   return new Promise((resolve, reject) => {
@@ -93,6 +93,13 @@ async function main(): Promise<void> {
   process.stdin.on('end', async () => {
     try {
       const data = JSON.parse(input);
+
+      if (data.hookEvent !== 'PreToolUse') {
+        console.log(JSON.stringify({ decision: 'allow' }));
+        process.exit(0);
+        return;
+      }
+
       const { tool, params } = extractToolAndParams(data);
 
       if (autoApproveTools.some((t) => tool.toLowerCase().includes(t))) {
