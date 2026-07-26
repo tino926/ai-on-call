@@ -86,7 +86,7 @@ describe('E2E: Approval HTTP lifecycle', () => {
     expect(mockBot.telegram.sendMessage).toHaveBeenCalledTimes(1);
     expect(mockBot.telegram.sendMessage).toHaveBeenCalledWith(
       123456789,
-      expect.stringContaining('🔐'),
+      expect.stringContaining('🔮'),
       expect.objectContaining({
         parse_mode: 'Markdown',
         reply_markup: expect.objectContaining({
