@@ -199,7 +199,7 @@ async function handleDenyCallback(ctx: Context, state: BotState, requestId: stri
 async function handleRuntimeCallback(ctx: Context, state: BotState, runtime: string): Promise<void> {
   const lang = getUserLang(ctx);
   
-  if (!['claude', 'qwen', 'opencode', 'gemini'].includes(runtime)) {
+  if (!['claude', 'qwen', 'opencode', 'gemini', 'antigravity'].includes(runtime)) {
     await ctx.answerCbQuery(t('commands.runtime.unsupported', lang));
     return;
   }

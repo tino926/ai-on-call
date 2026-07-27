@@ -8,7 +8,7 @@ token = ""
 allowed_user_id = 0
 
 [runtime]
-# Default AI runtime: "claude", "opencode", "qwen", "gemini"
+# Default AI runtime: "claude", "opencode", "qwen", "gemini", "antigravity"
 default = "claude"
 
 # Working directory for AI CLI

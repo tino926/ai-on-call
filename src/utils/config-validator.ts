@@ -11,7 +11,7 @@ export class ConfigValidator {
   private static readonly MAX_PORT = 65535;
   private static readonly MIN_TIMEOUT = 30;
   private static readonly MAX_TIMEOUT = 3600;
-  private static readonly VALID_RUNTIMES = ['claude', 'qwen', 'opencode', 'gemini'] as const;
+  private static readonly VALID_RUNTIMES = ['claude', 'qwen', 'opencode', 'gemini', 'antigravity'] as const;
   private static readonly VALID_LOG_LEVELS = ['trace', 'debug', 'info', 'warn', 'error'] as const;
 
   /**

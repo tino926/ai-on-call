@@ -203,7 +203,7 @@ export async function handleRuntime(ctx: Context, state: BotState): Promise<void
   }
 
   const runtime = args[0].toLowerCase();
-  if (runtime === 'claude' || runtime === 'qwen' || runtime === 'opencode' || runtime === 'gemini') {
+  if (runtime === 'claude' || runtime === 'qwen' || runtime === 'opencode' || runtime === 'gemini' || runtime === 'antigravity') {
     state.runtimeName = runtime;
     state.clearRuntimeCache();
     
