@@ -35,7 +35,7 @@ claude code這樣的 Coding Agent 本身就已經具備強大的自主能力，�
 1. **遠端操控 AI** — 傳送訊息給 bot，AI 在你的電腦上執行任務
 2. **權限審批** — 當 AI 需要執行危險操作時，傳送 Allow/Deny 按鈕讓你確認
 3. **Session 管理** — 維持對話連續性，支援切換/恢復之前的 session
-4. **多 runtime 支援** — 可熱切換不同的 AI CLI（Claude / Qwen / OpenCode / Gemini）
+4. **多 runtime 支援** — 可熱切換不同的 AI CLI（Claude / Qwen / OpenCode / Gemini / Antigravity）
 
 ---
 
@@ -96,7 +96,7 @@ npm start    # 生產模式
 | `/sessions`       | 列出最近的 session（可點擊切換）                        |
 | `/new`            | 開啟新 session                                          |
 | `/restart`        | 重啟 bot                                                |
-| `/runtime <name>` | 切換 AI runtime（claude / qwen / opencode / gemini）             |
+| `/runtime <name>` | 切換 AI runtime（claude / qwen / opencode / gemini / antigravity）    |
 | `/lang [code]`    | 顯示或切換語言（zh-tw / zh-cn / en）                    |
 
 ### 一般訊息處理
@@ -130,6 +130,13 @@ npm start    # 生產模式
 - `Search` — 搜尋
 - `WebFetch` — 網頁擷取
 
+**Antigravity CLI:**
+- `Read` — 讀檔
+- `Glob` — 搜尋檔案
+- `Grep` — 搜尋內容
+- `Search` — 搜尋
+- `WebFetch` — 網頁擷取
+
 ---
 
 ## 系統架構
@@ -152,7 +159,7 @@ npm start    # 生產模式
 |             +---------------v----------------+                |
 |             |          AI Runtimes           |                |
 |             |  (Claude / Qwen / OpenCode /   |                |
-|             |   Gemini)                      |                |
+|             |   Gemini / Antigravity)        |                |
 |             +---------------+----------------+                |
 |                             |                                 |
 |             +---------------v----------------+                |
@@ -180,7 +187,7 @@ npm start    # 生產模式
 +----------------------+-------------------------------+---------------------------------+
 | Hook Server          | src/hook-server.ts            | 接收 Claude 的 TCP hook 請求    |
 |                      | src/opencode-hook-server.ts   | 接收 OpenCode 的 HTTP hook 請求 |
-|                      | src/approval-api-server.ts    | 接收 Gemini 的 HTTP 審批請求    |
+|                      | src/approval-api-server.ts    | 接收 Gemini/Antigravity 的 HTTP 審批請求 |
 +----------------------+-------------------------------+---------------------------------+
 | OpenCode Plugin      | src/opencode-plugin.ts        | OpenCode 專屬的權限審批外掛實作 |
 +----------------------+-------------------------------+---------------------------------+
@@ -224,7 +231,20 @@ OpenCode CLI
 繼續或阻止操作
 ```
 
-**3. Gemini CLI 流程**
+**3. Antigravity CLI 流程**（Gemini CLI 已退役，由 Antigravity CLI 取代）
+```text
+Antigravity CLI
+      |
+      |-- (PreToolUse Hook) -----> scripts/agy-hook.ts
+      |-- (HTTP POST) -----------> Approval API Server (:9877)
+                                        |-- (傳送 Allow/Deny) --> 使用者 Telegram 點擊
+                                        |<-- (Callback 結果) ----
+      |<-- (回應 {"decision": "allow"/"deny"})
+      |
+繼續或阻止操作
+```
+
+**4. Gemini CLI 流程**（僅企業用戶仍可使用）
 ```text
 Gemini CLI
       |
@@ -261,7 +281,8 @@ Gemini CLI
   - Claude Code CLI (`claude`)
   - Qwen Code CLI (`qwencode`)
   - OpenCode CLI (`opencode`)
-  - Gemini CLI (`gemini`)
+  - Antigravity CLI (`agy`)
+  - Gemini CLI (`gemini`，僅企業用戶）
 
 ### 專案結構
 
@@ -274,7 +295,7 @@ ai-on-call/
 │   ├── approval.ts              # 審批狀態管理
 │   ├── hook-server.ts           # TCP hook server (Claude用)
 │   ├── opencode-hook-server.ts  # HTTP hook server (OpenCode用)
-│   ├── approval-api-server.ts   # HTTP API server (Gemini用)
+│   ├── approval-api-server.ts   # HTTP API server (Gemini/Antigravity用)
 │   ├── opencode-plugin.ts       # OpenCode 審批外掛實作
 │   ├── i18n.ts                  # 多語系設定與支援
 │   ├── errors.ts                # 錯誤定義與處理
@@ -288,13 +309,15 @@ ai-on-call/
 │   │   ├── claude.ts            # Claude Code 實作
 │   │   ├── qwen.ts              # Qwen Code 實作
 │   │   ├── opencode.ts          # OpenCode 實作
-│   │   └── gemini.ts            # Gemini CLI 實作
+│   │   ├── gemini.ts            # Gemini CLI 實作
+│   │   └── antigravity.ts       # Antigravity CLI 實作
 │   └── utils/
 │       ├── logger.ts            # 日誌工具
 │       └── paths.ts             # 路徑管理
 ├── scripts/
 │   ├── check-config.ts          # 設定檢查腳本
 │   ├── gemini-hook.ts           # Gemini Hook 橋接腳本
+│   ├── agy-hook.ts              # Antigravity Hook 橋接腳本
 │   └── opencode-plugin/         # OpenCode 專用 plugin 目錄
 ├── locales/
 │   ├── en.json
@@ -315,14 +338,14 @@ token = "YOUR_TELEGRAM_BOT_TOKEN"   # 必填，從 @BotFather 取得
 allowed_user_id = 123456789        # 必填，0 = 不限制任何人
 
 [runtime]
-default = "claude"                 # 預設 AI runtime：claude / opencode / qwen / gemini
+default = "claude"                 # 預設 AI runtime：claude / opencode / qwen / gemini / antigravity
 work_dir = ""                       # 預設工作目錄，留空則使用當前目錄
 
 [hook]
 host = "127.0.0.1"                  # Hook server 監聽位址
 port = 9876                         # Claude TCP Hook Server port
 opencode_http_port = 3001           # OpenCode HTTP Hook Server port
-approval_api_port = 9877            # Gemini 審批 API Server port
+approval_api_port = 9877            # Gemini/Antigravity 審批 API Server port
 timeout_sec = 300                   # 審批超時秒數
 
 [logging]
@@ -393,6 +416,7 @@ handle_message 佔住 update queue，等 Claude 回應
 - [x] 單例 runtime（保留 rate limiting 狀態）
 - [x] OpenCode Runtime
 - [x] Gemini Runtime
+- [x] Antigravity Runtime
 - [x] 多語系支援 (i18n)
 - [x] `/lang` 指令（手動切換語言）
 

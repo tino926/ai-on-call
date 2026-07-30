@@ -32,7 +32,7 @@
 - **轻量** — 没有复杂的中介层，直接沟通
 - **随时可用** — 从手机也能叫 AI 做事
 - **完整对话** — 支持 session，AI 记得之前的上下文
-- **多 AI 支持** — 可自由切换 Claude、Qwen、OpenCode
+- **多 AI 支持** — 可自由切换 Claude、Qwen、OpenCode、Gemini、Antigravity
 
 ---
 
@@ -54,7 +54,7 @@
 
 ### 设置
 
-- `/runtime [名称]` — 切换 AI（claude / qwen / opencode）
+- `/runtime [名称]` — 切换 AI（claude / qwen / opencode / gemini / antigravity）
 - `/lang [语言]` — 切换界面语言
 
 ---
@@ -64,6 +64,8 @@
 | AI | 特色 |
 |---|------|
 | **Claude Code** | 最强的程序开发 AI，有完整的权限审批 |
+| **Antigravity CLI** | Gemini CLI 的继任者，完整的权限审批 |
+| **Gemini CLI** | 快速，Google 生态（仅企业用户，个人版已停服） |
 | **Qwen Code** | 快速，自动批准所有操作 |
 | **OpenCode** | 支持多种模型，性价比高 |
 
@@ -151,6 +153,8 @@ AI 就会开始工作并回复你。
 +------------------+
 | Claude / Qwen   |
 | / OpenCode      |
+| / Gemini        |
+| / Antigravity   |
 +------------------+
 ```
 
@@ -170,7 +174,8 @@ AI 就会开始工作并回复你。
 - [x] Claude Runtime
 - [x] Qwen Runtime
 - [x] OpenCode Runtime
-- [x] 权限审批（Claude、OpenCode）
+- [x] Antigravity Runtime
+- [x] 权限审批（Claude、OpenCode、Gemini、Antigravity）
 - [x] 多语言支持 (i18n)
 
 ### 待完成

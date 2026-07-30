@@ -32,7 +32,7 @@ Whether you're on your phone or away from your computer, just send a message to 
 - **Lightweight** — No complex middleware, direct communication
 - **Always accessible** — Use from your phone
 - **Full conversations** — Session support, AI remembers context
-- **Multiple AI** — Switch between Claude, Qwen, OpenCode
+- **Multiple AI** — Switch between Claude, Qwen, OpenCode, Gemini, Antigravity
 
 ---
 
@@ -54,7 +54,7 @@ Whether you're on your phone or away from your computer, just send a message to 
 
 ### Settings
 
-- `/runtime [name]` — Switch AI (claude / qwen / opencode / gemini)
+- `/runtime [name]` — Switch AI (claude / qwen / opencode / gemini / antigravity)
 - `/lang [code]` — Change language
 
 ---
@@ -64,7 +64,8 @@ Whether you're on your phone or away from your computer, just send a message to 
 | AI | Features |
 |---|----------|
 | **Claude Code** | Most powerful for coding, full permission approval |
-| **Gemini CLI** | Fast, Google ecosystem, full permission approval |
+| **Antigravity CLI** | Successor to Gemini CLI, full permission approval |
+| **Gemini CLI** | Fast, Google ecosystem (enterprise only, sunset for personal use) |
 | **Qwen Code** | Fast, auto-approves all operations |
 | **OpenCode** | Multiple models, cost-effective |
 
@@ -153,6 +154,7 @@ AI will start working and reply.
 | Claude / Qwen   |
 | / OpenCode      |
 | / Gemini        |
+| / Antigravity   |
 +------------------+
 ```
 
@@ -173,7 +175,8 @@ AI will start working and reply.
 - [x] Qwen Runtime
 - [x] OpenCode Runtime
 - [x] Gemini Runtime
-- [x] Permission approval (Claude, OpenCode, Gemini)
+- [x] Antigravity Runtime
+- [x] Permission approval (Claude, OpenCode, Gemini, Antigravity)
 - [x] i18n support
 
 ### In Progress
