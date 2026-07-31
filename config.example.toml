@@ -24,7 +24,7 @@ port = 9876
 # OpenCode hook server port
 opencode_http_port = 3001
 
-# Approval API server port (for Gemini CLI)
+# Approval API server port (for Gemini/Antigravity CLI)
 approval_api_port = 9877
 
 # Approval timeout in seconds
