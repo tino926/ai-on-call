@@ -5,6 +5,7 @@ import { HookServer } from './hook-server.js';
 import { OpenCodeHookServer } from './opencode-hook-server.js';
 import { ApprovalApiServer } from './approval-api-server.js';
 import { ensureOpenCodePlugin } from './opencode-plugin.js';
+import { ensureAntigravityHook } from './antigravity-hook.js';
 import { ensureDirectories } from './utils/paths.js';
 import { handleStatus, handlePwd, handleCd, handleLs, handleSessions, handleNew, handleRestart, handleRuntime, handleLang } from './bot/commands.js';
 import { handleMessage, handlePhoto, cleanupMediaGroupBuffers } from './bot/handlers.js';
@@ -20,6 +21,9 @@ async function main(): Promise<void> {
 
   // Ensure OpenCode plugin is installed
   ensureOpenCodePlugin();
+
+  // Ensure Antigravity hook is installed
+  ensureAntigravityHook();
 
   // Set log level
   logger.level = config.logging.level;
