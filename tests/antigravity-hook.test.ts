@@ -59,4 +59,16 @@ describe('ensureAntigravityHook', () => {
     expect(hooks['existing-hook']).toEqual({ enabled: true });
     expect(hooks['ai-on-call-approval']).toBeDefined();
   });
+
+  it('既有 hooks.json 不是物件時不應覆寫為 primitive', () => {
+    const hooksDir = path.join(tmpHome, '.gemini', 'config');
+    fs.mkdirSync(hooksDir, { recursive: true });
+    fs.writeFileSync(path.join(hooksDir, 'hooks.json'), JSON.stringify([1, 2, 3]));
+
+    ensureAntigravityHook();
+
+    const hooks = JSON.parse(fs.readFileSync(path.join(hooksDir, 'hooks.json'), 'utf-8'));
+    expect(Array.isArray(hooks)).toBe(false);
+    expect(hooks['ai-on-call-approval']).toBeDefined();
+  });
 });

@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 import { logger } from './utils/logger.js';
 
 const AGY_HOOKS_FILE_NAME = 'hooks.json';
@@ -16,7 +17,7 @@ function getAgyHooksFile(): string {
 }
 
 function getHookScriptPath(): string | null {
-  const currentDir = path.dirname(new URL(import.meta.url).pathname);
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
   const candidates = [
     path.join(currentDir, '..', 'scripts', 'agy-hook.ts'),
     path.join(process.cwd(), 'scripts', 'agy-hook.ts'),
@@ -55,7 +56,12 @@ export function ensureAntigravityHook(): void {
     let hooks: Record<string, any> = {};
     if (fs.existsSync(agyHooksFile)) {
       try {
-        hooks = JSON.parse(fs.readFileSync(agyHooksFile, 'utf-8'));
+        const parsed = JSON.parse(fs.readFileSync(agyHooksFile, 'utf-8'));
+        if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+          hooks = parsed;
+        } else {
+          logger.warn(`Ignoring invalid hooks.json (not an object): ${agyHooksFile}`);
+        }
       } catch {
         hooks = {};
       }
