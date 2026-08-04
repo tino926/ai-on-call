@@ -62,7 +62,8 @@ export function ensureAntigravityHook(): void {
         } else {
           logger.warn(`Ignoring invalid hooks.json (not an object): ${agyHooksFile}`);
         }
-      } catch {
+      } catch (error) {
+        logger.warn(`Failed to parse existing hooks.json: ${agyHooksFile}`, { error: error instanceof Error ? error.message : String(error) });
         hooks = {};
       }
     }

@@ -60,14 +60,20 @@ describe('ensureAntigravityHook', () => {
     expect(hooks['ai-on-call-approval']).toBeDefined();
   });
 
-  it('既有 hooks.json 不是物件時不應覆寫為 primitive', () => {
+  it.each([
+    ['array', [1, 2, 3]],
+    ['null', null],
+    ['string', 'not-json-object'],
+    ['number', 123],
+  ])('既有 hooks.json 是 %s 時不應覆寫為 primitive', (_label, invalidContent) => {
     const hooksDir = path.join(tmpHome, '.gemini', 'config');
     fs.mkdirSync(hooksDir, { recursive: true });
-    fs.writeFileSync(path.join(hooksDir, 'hooks.json'), JSON.stringify([1, 2, 3]));
+    fs.writeFileSync(path.join(hooksDir, 'hooks.json'), JSON.stringify(invalidContent));
 
     ensureAntigravityHook();
 
     const hooks = JSON.parse(fs.readFileSync(path.join(hooksDir, 'hooks.json'), 'utf-8'));
+    expect(typeof hooks).toBe('object');
     expect(Array.isArray(hooks)).toBe(false);
     expect(hooks['ai-on-call-approval']).toBeDefined();
   });
