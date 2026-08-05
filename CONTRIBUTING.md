@@ -80,8 +80,9 @@ ai-on-call/
 │   ├── i18n.ts                  # i18n core module
 │   ├── hook-server.ts           # TCP Hook Server (Claude, port 9876)
 │   ├── opencode-hook-server.ts  # HTTP Hook Server (OpenCode, port 3001)
-│   ├── approval-api-server.ts   # HTTP API Server (Gemini, port 9877)
+│   ├── approval-api-server.ts   # HTTP API Server (Gemini/Antigravity, port 9877)
 │   ├── opencode-plugin.ts       # OpenCode plugin installer
+│   ├── antigravity-hook.ts      # Antigravity hook installer
 │   ├── bot/
 │   │   ├── index.ts             # Bot initialization (Telegraf)
 │   │   ├── commands.ts          # Bot command handlers
@@ -92,7 +93,8 @@ ai-on-call/
 │   │   ├── claude.ts            # Claude Code runtime (Hook approval)
 │   │   ├── qwen.ts              # Qwen runtime (YOLO mode, no approval)
 │   │   ├── opencode.ts          # OpenCode runtime (Hook approval)
-│   │   └── gemini.ts            # Gemini CLI runtime (Hook approval)
+│   │   ├── gemini.ts            # Gemini CLI runtime (Hook approval)
+│   │   └── antigravity.ts       # Antigravity CLI runtime (Hook approval)
 │   └── utils/
 │       ├── logger.ts            # Winston logger
 │       ├── retry.ts             # retryWithBackoff + isRateLimitError
@@ -103,7 +105,7 @@ ai-on-call/
 │   ├── setup.ts                 # Global test setup (mock logger, fetch)
 │   ├── fixtures/
 │   │   └── config.valid.toml    # Valid config fixture for tests
-│   ├── runtime.test.ts          # Unit: runtime (24 tests)
+│   ├── runtime.test.ts          # Unit: runtime (31 tests)
 │   ├── bot.test.ts              # Unit: bot handlers (13 tests)
 │   ├── e2e-runtime.test.ts      # E2E: real spawn runtime (8 tests)
 │   ├── e2e-approval.test.ts     # E2E: approval lifecycle (5 tests)
@@ -118,6 +120,7 @@ ai-on-call/
 │   ├── zh-TW.json / zh-CN.json / en.json
 ├── scripts/
 │   ├── gemini-hook.ts           # Gemini CLI hook bridge script
+│   ├── agy-hook.ts              # Antigravity CLI hook bridge script
 │   ├── setup-config.ts          # Config setup wizard
 │   ├── check-config.ts          # Config validation check
 │   └── opencode-plugin/        # OpenCode hook plugin files
@@ -173,6 +176,7 @@ export interface AiRuntime {
 - `claude.ts` — Uses TCP hook server for approval
 - `opencode.ts` — Uses HTTP hook server for approval
 - `gemini.ts` — Uses HTTP API server for approval (via gemini-hook.ts bridge)
+- `antigravity.ts` — Uses HTTP API server for approval (via agy-hook.ts bridge)
 - `qwen.ts` — YOLO mode (no approval needed)
 
 When adding a new runtime:
