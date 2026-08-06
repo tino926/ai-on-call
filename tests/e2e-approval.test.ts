@@ -36,6 +36,7 @@ describe('E2E: Approval HTTP lifecycle', () => {
   });
 
   afterEach(() => {
+    server.close();
     httpServer.close();
   });
 
@@ -176,6 +177,7 @@ describe('E2E: Approval HTTP lifecycle', () => {
       });
       expect(timedOutStatus.approved).toBe(false);
     } finally {
+      timeoutServer.close();
       timeoutHttpServer.close();
     }
   });
@@ -237,6 +239,63 @@ describe('E2E: Approval HTTP lifecycle', () => {
     );
 
     expect(mockBot.telegram.sendMessage).toHaveBeenCalledTimes(5);
+  });
+
+  it('should include tool-specific details for agy PascalCase params', async () => {
+    await makeRequest('POST', '/api/approval/request', {
+      tool: 'Bash',
+      params: JSON.stringify({ CommandLine: 'npm run build', Cwd: '/workspace/project' }),
+      session_id: 'agy-bash',
+    });
+    expect(mockBot.telegram.sendMessage).toHaveBeenLastCalledWith(
+      expect.any(Number),
+      expect.stringContaining('npm run build'),
+      expect.any(Object),
+    );
+
+    await makeRequest('POST', '/api/approval/request', {
+      tool: 'Write',
+      params: JSON.stringify({ TargetFile: '/tmp/agy-write.txt' }),
+      session_id: 'agy-write',
+    });
+    expect(mockBot.telegram.sendMessage).toHaveBeenLastCalledWith(
+      expect.any(Number),
+      expect.stringContaining('/tmp/agy-write.txt'),
+      expect.any(Object),
+    );
+
+    await makeRequest('POST', '/api/approval/request', {
+      tool: 'Read',
+      params: JSON.stringify({ AbsolutePath: '/var/log/syslog' }),
+      session_id: 'agy-read',
+    });
+    expect(mockBot.telegram.sendMessage).toHaveBeenLastCalledWith(
+      expect.any(Number),
+      expect.stringContaining('/var/log/syslog'),
+      expect.any(Object),
+    );
+
+    await makeRequest('POST', '/api/approval/request', {
+      tool: 'Glob',
+      params: JSON.stringify({ DirectoryPath: '/workspace' }),
+      session_id: 'agy-glob',
+    });
+    expect(mockBot.telegram.sendMessage).toHaveBeenLastCalledWith(
+      expect.any(Number),
+      expect.stringContaining('/workspace'),
+      expect.any(Object),
+    );
+
+    await makeRequest('POST', '/api/approval/request', {
+      tool: 'Grep',
+      params: JSON.stringify({ SearchPath: 'src/', Query: 'function' }),
+      session_id: 'agy-grep',
+    });
+    expect(mockBot.telegram.sendMessage).toHaveBeenLastCalledWith(
+      expect.any(Number),
+      expect.stringContaining('function'),
+      expect.any(Object),
+    );
   });
 
   it('should handle concurrent requests independently', async () => {

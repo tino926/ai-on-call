@@ -27,6 +27,7 @@ export class ApprovalApiServer {
   private lang: Language = DEFAULT_LANG;
   private bot!: Telegraf;
   private completed: Map<string, CompletedEntry> = new Map();
+  private cleanupTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     host: string,
@@ -46,6 +47,13 @@ export class ApprovalApiServer {
     return this.server;
   }
 
+  close(): void {
+    if (this.cleanupTimer) {
+      clearInterval(this.cleanupTimer);
+      this.cleanupTimer = null;
+    }
+  }
+
   setLanguage(lang: Language): void {
     this.lang = lang;
   }
@@ -62,6 +70,8 @@ export class ApprovalApiServer {
       this.completed.set(request.id, { approved: false, timestamp: Date.now() });
       this.cleanupCompleted();
     });
+
+    this.cleanupTimer = setInterval(() => this.cleanupCompleted(), COMPLETED_CLEANUP_TTL_MS).unref();
 
     return new Promise((resolve, reject) => {
       this.server.on('error', (err) => {
@@ -196,33 +206,33 @@ export class ApprovalApiServer {
 
       switch (tool) {
         case 'Bash':
-          if (parsed.command) {
-            const cmd = parsed.command.length > 300
-              ? parsed.command.slice(0, 300) + '...'
-              : parsed.command;
-            return `${t('hooks.permission.toolTypes.bash', this.lang)}\`${cmd}\``;
+          if (parsed.command || parsed.CommandLine) {
+            const cmd = (parsed.command || parsed.CommandLine).toString();
+            const cmdPreview = cmd.length > 300 ? cmd.slice(0, 300) + '...' : cmd;
+            return `${t('hooks.permission.toolTypes.bash', this.lang)}\`${cmdPreview}\``;
           }
           break;
         case 'Write':
         case 'Edit':
-          if (parsed.file_path) {
-            return `${t('hooks.permission.toolTypes.file', this.lang)}\`${parsed.file_path}\``;
+          if (parsed.file_path || parsed.TargetFile) {
+            return `${t('hooks.permission.toolTypes.file', this.lang)}\`${parsed.file_path || parsed.TargetFile}\``;
           }
           break;
         case 'Read':
-          if (parsed.file_path) {
-            return `${t('hooks.permission.toolTypes.read', this.lang)}\`${parsed.file_path}\``;
+          if (parsed.file_path || parsed.AbsolutePath) {
+            return `${t('hooks.permission.toolTypes.read', this.lang)}\`${parsed.file_path || parsed.AbsolutePath}\``;
           }
           break;
         case 'Glob':
-          if (parsed.pattern) {
-            return `${t('hooks.permission.toolTypes.glob', this.lang)}\`${parsed.pattern}\``;
+          if (parsed.pattern || parsed.DirectoryPath) {
+            return `${t('hooks.permission.toolTypes.glob', this.lang)}\`${parsed.pattern || parsed.DirectoryPath}\``;
           }
           break;
         case 'Grep':
-          if (parsed.pattern) {
-            const path = parsed.path || '.';
-            return `${t('hooks.permission.toolTypes.grep', this.lang, { path })}\`${parsed.pattern}\` \`${path}\``;
+          if (parsed.pattern || parsed.Query) {
+            const path = parsed.path || parsed.SearchPath || '.';
+            const pattern = parsed.pattern || parsed.Query;
+            return `${t('hooks.permission.toolTypes.grep', this.lang, { path })}\`${pattern}\` \`${path}\``;
           }
           break;
       }
