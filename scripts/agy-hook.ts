@@ -6,7 +6,7 @@ const HOOK_SERVER_HOST = process.env.HOOK_SERVER_HOST || '127.0.0.1';
 const HOOK_SERVER_PORT = parseInt(process.env.HOOK_SERVER_PORT || '9877', 10);
 const APPROVAL_TIMEOUT_SEC = parseInt(process.env.APPROVAL_TIMEOUT_SEC || '300', 10);
 
-const autoApproveTools = ['read', 'glob', 'grep', 'search', 'webfetch'];
+const autoApproveTools = ['read', 'glob', 'grep', 'search', 'webfetch', 'list_permissions'];
 
 async function httpRequest(method: string, path: string, body?: object): Promise<any> {
   return new Promise((resolve, reject) => {
@@ -75,7 +75,10 @@ function extractToolAndParams(data: any): { tool: string; params: string } {
     'multi_replace_file_content': 'Edit',
     'view_file': 'Read',
     'list_dir': 'Glob',
+    'find_by_name': 'Glob',
     'grep_search': 'Grep',
+    'search_web': 'Search',
+    'read_url_content': 'WebFetch',
   };
   tool = toolNameMap[tool] || tool;
 
@@ -94,7 +97,7 @@ async function main(): Promise<void> {
     try {
       const data = JSON.parse(input);
 
-      if (data.hookEvent !== 'PreToolUse') {
+      if (!data.toolCall) {
         console.log(JSON.stringify({ decision: 'allow' }));
         process.exit(0);
         return;
@@ -109,7 +112,7 @@ async function main(): Promise<void> {
       }
 
       const workspacePaths = data.workspacePaths || [];
-      const sessionId = workspacePaths.join(',') || `agy-${Date.now()}`;
+      const sessionId = data.conversationId || workspacePaths.join(',') || `agy-${Date.now()}`;
 
       const approved = await waitForApproval(tool, params, sessionId);
 
