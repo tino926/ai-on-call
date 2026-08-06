@@ -125,6 +125,7 @@ async function main(): Promise<void> {
     hookServer.getServer().close();
     opencodeHookServer.getServer().close();
     approvalApiServer.getServer().close();
+    approvalApiServer.close();
     process.exit(0);
   });
 
@@ -135,6 +136,7 @@ async function main(): Promise<void> {
     hookServer.getServer().close();
     opencodeHookServer.getServer().close();
     approvalApiServer.getServer().close();
+    approvalApiServer.close();
     process.exit(0);
   });
 }
