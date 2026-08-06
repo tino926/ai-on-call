@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { ensureAntigravityHook } from '../src/antigravity-hook.js';
+import { ensureAntigravityHook, shellQuote } from '../src/antigravity-hook.js';
 
 const ORIGINAL_HOME = process.env.HOME;
 
@@ -76,5 +76,31 @@ describe('ensureAntigravityHook', () => {
     expect(typeof hooks).toBe('object');
     expect(Array.isArray(hooks)).toBe(false);
     expect(hooks['ai-on-call-approval']).toBeDefined();
+  });
+
+  it('不應在內容不變時重寫 hooks.json', () => {
+    ensureAntigravityHook();
+
+    const hooksFile = path.join(tmpHome, '.gemini', 'config', 'hooks.json');
+    const before = fs.statSync(hooksFile).mtimeMs;
+
+    ensureAntigravityHook();
+
+    const after = fs.statSync(hooksFile).mtimeMs;
+    expect(after).toBe(before);
+  });
+});
+
+describe('shellQuote', () => {
+  it('不應改動安全的絕對路徑', () => {
+    expect(shellQuote('/home/user/project/scripts/agy-hook.ts')).toBe('/home/user/project/scripts/agy-hook.ts');
+  });
+
+  it('應引號包住含空白的路徑', () => {
+    expect(shellQuote('/home/user/My Documents/agy-hook.ts')).toBe("'/home/user/My Documents/agy-hook.ts'");
+  });
+
+  it('應轉義路徑內的單引號', () => {
+    expect(shellQuote("/tmp/foo'bar/agy-hook.ts")).toBe("'/tmp/foo'\\''bar/agy-hook.ts'");
   });
 });

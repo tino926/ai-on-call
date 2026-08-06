@@ -30,12 +30,17 @@ function getHookScriptPath(): string | null {
   return null;
 }
 
+export function shellQuote(s: string): string {
+  if (/^[A-Za-z0-9_\-./:=,%@+]+$/.test(s)) return s;
+  return `'${s.replace(/'/g, `'\\''`)}'`;
+}
+
 function buildHookCommand(scriptPath: string): string {
   const localTsx = path.join(process.cwd(), 'node_modules', '.bin', 'tsx');
   if (fs.existsSync(localTsx)) {
-    return `${process.execPath} "${localTsx}" "${scriptPath}"`;
+    return `${shellQuote(process.execPath)} ${shellQuote(localTsx)} ${shellQuote(scriptPath)}`;
   }
-  return `npx tsx "${scriptPath}"`;
+  return `npx tsx ${shellQuote(scriptPath)}`;
 }
 
 export function ensureAntigravityHook(): void {
@@ -83,7 +88,16 @@ export function ensureAntigravityHook(): void {
       ],
     };
 
-    fs.writeFileSync(agyHooksFile, JSON.stringify(hooks, null, 2));
+    const newContent = JSON.stringify(hooks, null, 2) + '\n';
+
+    if (fs.existsSync(agyHooksFile) && fs.readFileSync(agyHooksFile, 'utf-8') === newContent) {
+      logger.info(`Antigravity hook already installed: ${agyHooksFile}`);
+      return;
+    }
+
+    const tmpFile = `${agyHooksFile}.tmp-${process.pid}`;
+    fs.writeFileSync(tmpFile, newContent);
+    fs.renameSync(tmpFile, agyHooksFile);
     logger.info(`Antigravity hook installed: ${agyHooksFile}`);
   } catch (error: any) {
     logger.error(`Failed to install Antigravity hook: ${error.message}`);
