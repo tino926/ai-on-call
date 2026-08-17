@@ -136,7 +136,7 @@ describe('Runtime', () => {
       const result = await runtime.execute('test prompt', '/test/workdir');
 
       expect(result.stdout).toBe('response output');
-      expect(spawn).toHaveBeenCalledWith('agy', ['-p', 'test prompt'], expect.objectContaining({
+      expect(spawn).toHaveBeenCalledWith('agy', ['-p', 'test prompt', '--dangerously-skip-permissions'], expect.objectContaining({
         cwd: '/test/workdir',
       }));
     });
@@ -159,7 +159,7 @@ describe('Runtime', () => {
       const runtime = new AntigravityRuntime('/test/workdir');
       await runtime.execute('test prompt', '/test/workdir', 'conv-123');
 
-      expect(spawn).toHaveBeenCalledWith('agy', ['-p', 'test prompt', '--conversation', 'conv-123'], expect.anything());
+      expect(spawn).toHaveBeenCalledWith('agy', ['-p', 'test prompt', '--dangerously-skip-permissions', '--conversation', 'conv-123'], expect.anything());
     });
 
     it('應該在遇到 rate limit 時拋出錯誤', async () => {

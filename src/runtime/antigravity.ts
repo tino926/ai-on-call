@@ -20,7 +20,7 @@ export class AntigravityRuntime implements AiRuntime {
 
     const actualWorkDir = _workDir || this.workDir;
 
-    const args = ['-p', prompt];
+    const args = ['-p', prompt, '--dangerously-skip-permissions'];
 
     if (sessionId) {
       args.push('--conversation', sessionId);
