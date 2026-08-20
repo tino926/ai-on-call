@@ -369,15 +369,16 @@ bot 發起 session 時，Claude Code 內部透過 TCP 連線至 Hook Server。Ho
 
 ### 2. `--dangerously-skip-permissions`
 
-`claude -p` 有**兩層**權限系統：
+`claude -p` 與 `agy -p` 都有**兩層**權限系統：
 
 | 層級       | 來源            | 作用                       |
 | ---------- | --------------- | -------------------------- |
 | Hook 層    | hook-server.ts  | 我們的審批（可控）         |
-| CLI 內建層 | claude 自身     | 會再次擋住 Write/Edit/Bash |
+| CLI 內建層 | claude / agy 自身 | 會再次擋住 Write/Edit/Bash |
 
 如果不加 `--dangerously-skip-permissions`，即使你按了 Allow，CLI 內建的權限系統
-還是會擋住。本專案已加入這個 flag，讓 hook 成為**唯一的權限把關者**。
+還是會擋住（agy headless 模式更會直接 soft-deny，即使 hook 回傳 allow）。本專案
+已加入這個 flag，讓 hook 成為**唯一的權限把關者**。
 
 ### 3. Telegraf 並發處理
 

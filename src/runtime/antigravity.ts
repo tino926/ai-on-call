@@ -20,6 +20,8 @@ export class AntigravityRuntime implements AiRuntime {
 
     const actualWorkDir = _workDir || this.workDir;
 
+    // Bypass agy's built-in permission layer so the PreToolUse hook (hooks.json)
+    // is the sole approval gate; without this agy soft-denies tools even when the hook returns allow
     const args = ['-p', prompt, '--dangerously-skip-permissions'];
 
     if (sessionId) {
