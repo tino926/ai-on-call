@@ -235,7 +235,7 @@ OpenCode CLI
 ```text
 Antigravity CLI
       |
-      |-- (PreToolUse Hook) -----> scripts/agy-hook.ts
+      |-- (PreToolUse Hook) -----> dist/agy-hook.js
       |-- (HTTP POST) -----------> Approval API Server (:9877)
                                         |-- (傳送 Allow/Deny) --> 使用者 Telegram 點擊
                                         |<-- (Callback 結果) ----
@@ -248,7 +248,7 @@ Antigravity CLI
 ```text
 Gemini CLI
       |
-      |-- (.gemini/settings.json Command Hook) --> scripts/gemini-hook.ts
+      |-- (.gemini/settings.json Command Hook) --> dist/gemini-hook.js
       |-- (HTTP POST) -----------------------> Approval API Server (:9877)
                                                     |-- (傳送 Allow/Deny) --> 使用者 Telegram 點擊
                                                     |<-- (Callback 結果) ----
@@ -316,8 +316,8 @@ ai-on-call/
 │       └── paths.ts             # 路徑管理
 ├── scripts/
 │   ├── check-config.ts          # 設定檢查腳本
-│   ├── gemini-hook.ts           # Gemini Hook 橋接腳本
-│   ├── agy-hook.ts              # Antigravity Hook 橋接腳本
+│   ├── gemini-hook.ts           # Gemini Hook 橋接腳本（編譯為 dist/gemini-hook.js）
+│   ├── agy-hook.ts              # Antigravity Hook 橋接腳本（編譯為 dist/agy-hook.js）
 │   └── opencode-plugin/         # OpenCode 專用 plugin 目錄
 ├── locales/
 │   ├── en.json

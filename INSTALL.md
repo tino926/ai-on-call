@@ -131,7 +131,7 @@ sudo systemctl start ai-on-call
 
 ### Gemini CLI 審批沒反應
 
-1. 確認 `scripts/gemini-hook.ts` 已正確編譯
+1. 確認 `npm run build` 已執行（產生 `dist/gemini-hook.js`）
 2. 確認 `.gemini/settings.json` 有設定 Command Hook
 3. 確認 Approval API Server 正常啟動（預設 port 9877）
 

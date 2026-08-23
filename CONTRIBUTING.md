@@ -119,8 +119,8 @@ ai-on-call/
 ├── locales/
 │   ├── zh-TW.json / zh-CN.json / en.json
 ├── scripts/
-│   ├── gemini-hook.ts           # Gemini CLI hook bridge script
-│   ├── agy-hook.ts              # Antigravity CLI hook bridge script
+│   ├── gemini-hook.ts           # Gemini CLI hook bridge (compiled to dist/gemini-hook.js)
+│   ├── agy-hook.ts              # Antigravity CLI hook bridge (compiled to dist/agy-hook.js)
 │   ├── setup-config.ts          # Config setup wizard
 │   ├── check-config.ts          # Config validation check
 │   └── opencode-plugin/        # OpenCode hook plugin files

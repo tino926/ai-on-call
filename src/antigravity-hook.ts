@@ -18,10 +18,19 @@ function getAgyHooksFile(): string {
 
 function getHookScriptPath(): string | null {
   const currentDir = path.dirname(fileURLToPath(import.meta.url));
-  const candidates = [
+  // Running compiled from dist/ → prefer the compiled JS (no tsx needed on global installs).
+  // Running from src/ in dev (tsx) → prefer the .ts source so edits take effect without a rebuild.
+  const runningFromDist = path.basename(currentDir) === 'dist';
+  const jsCandidates = [
+    path.join(currentDir, 'agy-hook.js'),
+    path.join(currentDir, '..', 'dist', 'agy-hook.js'),
+    path.join(process.cwd(), 'dist', 'agy-hook.js'),
+  ];
+  const tsCandidates = [
     path.join(currentDir, '..', 'scripts', 'agy-hook.ts'),
     path.join(process.cwd(), 'scripts', 'agy-hook.ts'),
   ];
+  const candidates = runningFromDist ? [...jsCandidates, ...tsCandidates] : [...tsCandidates, ...jsCandidates];
 
   for (const candidate of candidates) {
     if (fs.existsSync(candidate)) return candidate;
@@ -35,10 +44,14 @@ export function shellQuote(s: string): string {
   return `'${s.replace(/'/g, `'\\''`)}'`;
 }
 
-function buildHookCommand(scriptPath: string): string {
+export function buildHookCommand(scriptPath: string): string {
+  const node = shellQuote(process.execPath);
+  if (scriptPath.endsWith('.js')) {
+    return `${node} ${shellQuote(scriptPath)}`;
+  }
   const localTsx = path.join(process.cwd(), 'node_modules', '.bin', 'tsx');
   if (fs.existsSync(localTsx)) {
-    return `${shellQuote(process.execPath)} ${shellQuote(localTsx)} ${shellQuote(scriptPath)}`;
+    return `${node} ${shellQuote(localTsx)} ${shellQuote(scriptPath)}`;
   }
   return `npx tsx ${shellQuote(scriptPath)}`;
 }
@@ -47,7 +60,7 @@ export function ensureAntigravityHook(): void {
   try {
     const scriptPath = getHookScriptPath();
     if (!scriptPath) {
-      logger.warn('Antigravity hook script not found (scripts/agy-hook.ts)');
+      logger.warn('Antigravity hook script not found (dist/agy-hook.js or scripts/agy-hook.ts)');
       return;
     }
 

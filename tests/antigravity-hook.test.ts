@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { ensureAntigravityHook, shellQuote } from '../src/antigravity-hook.js';
+import { ensureAntigravityHook, shellQuote, buildHookCommand } from '../src/antigravity-hook.js';
 
 const ORIGINAL_HOME = process.env.HOME;
 
@@ -34,15 +34,19 @@ describe('ensureAntigravityHook', () => {
     expect(hooks['ai-on-call-approval'].PreToolUse[0].hooks[0].timeout).toBe(300);
   });
 
-  it('command 應包含 agy-hook.ts 的絕對路徑', () => {
+  it('command 應指向存在的 hook script 且使用絕對路徑', () => {
     ensureAntigravityHook();
 
     const hooksFile = path.join(tmpHome, '.gemini', 'config', 'hooks.json');
     const hooks = JSON.parse(fs.readFileSync(hooksFile, 'utf-8'));
     const command = hooks['ai-on-call-approval'].PreToolUse[0].hooks[0].command;
 
-    expect(command).toContain('agy-hook.ts');
+    expect(command).toContain('agy-hook.');
     expect(path.isAbsolute(command)).toBe(true);
+
+    const scriptMatch = command.replace(/'/g, '').match(/([^\s]+agy-hook\.(?:js|ts))/);
+    expect(scriptMatch).not.toBeNull();
+    expect(fs.existsSync(scriptMatch![1])).toBe(true);
   });
 
   it('不應覆寫既有的 hooks 設定', () => {
@@ -88,6 +92,20 @@ describe('ensureAntigravityHook', () => {
 
     const after = fs.statSync(hooksFile).mtimeMs;
     expect(after).toBe(before);
+  });
+});
+
+describe('buildHookCommand', () => {
+  it('編譯後的 .js script 應直接用 node 執行（不需 tsx）', () => {
+    const command = buildHookCommand('/opt/ai-on-call/dist/agy-hook.js');
+    expect(command).toContain('agy-hook.js');
+    expect(command).not.toContain('tsx');
+  });
+
+  it('.ts script 應使用本機 tsx', () => {
+    const command = buildHookCommand('/opt/ai-on-call/scripts/agy-hook.ts');
+    expect(command).toContain('tsx');
+    expect(command).toContain('agy-hook.ts');
   });
 });
 
