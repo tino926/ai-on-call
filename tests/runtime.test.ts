@@ -1,4 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { getRuntime, ClaudeCodeRuntime, QwenCodeRuntime, OpenCodeRuntime, GeminiCodeRuntime, AntigravityRuntime, type ToolCall } from '../src/runtime/index.js';
 import { spawn } from 'child_process';
 
@@ -201,6 +204,91 @@ describe('Runtime', () => {
 
       const args = (spawn as any).mock.calls[0][1] as string[];
       expect(args).not.toContain('--file');
+    });
+  });
+
+  describe('AntigravityRuntime conversation resume', () => {
+    const STATE_FILE = path.join(os.tmpdir(), `agy-conv-test-${process.pid}`);
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+      process.env.AI_ON_CALL_CONVERSATION_STATE = STATE_FILE;
+    });
+
+    afterEach(() => {
+      delete process.env.AI_ON_CALL_CONVERSATION_STATE;
+      fs.rmSync(STATE_FILE, { force: true });
+    });
+
+    function mockAgyRun(stdoutContent = 'response'): void {
+      const mockProc = {
+        stdout: { on: vi.fn() },
+        stderr: { on: vi.fn() },
+        on: vi.fn(),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+      mockProc.stdout.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'data') {
+          // Simulate the hook bridge writing the conversation id mid-run
+          fs.writeFileSync(STATE_FILE, 'fresh-conv-uuid');
+          cb(Buffer.from(stdoutContent));
+        }
+      });
+      mockProc.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'close') setTimeout(() => cb(0), 0);
+      });
+    }
+
+    it('應該在執行前清除舊狀態檔，並在結束後讀取新的 conversationId', async () => {
+      fs.writeFileSync(STATE_FILE, 'stale-conv-uuid');
+
+      mockAgyRun();
+
+      const runtime = new AntigravityRuntime('/test/workdir');
+      const result = await runtime.execute('test prompt', '/test/workdir');
+
+      expect(result.sessionId).toBe('fresh-conv-uuid');
+    });
+
+    it('應該透過環境變數傳遞狀態檔路徑給 agy', async () => {
+      mockAgyRun();
+
+      const runtime = new AntigravityRuntime('/test/workdir');
+      await runtime.execute('test prompt', '/test/workdir');
+
+      const opts = (spawn as any).mock.calls[0][2];
+      expect(opts.env.AI_ON_CALL_CONVERSATION_STATE).toBe(STATE_FILE);
+    });
+
+    it('應該在狀態檔不存在時回傳 undefined sessionId', async () => {
+      const mockProc = {
+        stdout: { on: vi.fn() },
+        stderr: { on: vi.fn() },
+        on: vi.fn(),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+      mockProc.stdout.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'data') cb(Buffer.from('no tools used'));
+      });
+      mockProc.on.mockImplementation((event: string, cb: Function) => {
+        if (event === 'close') setTimeout(() => cb(0), 0);
+      });
+
+      const runtime = new AntigravityRuntime('/test/workdir');
+      const result = await runtime.execute('test prompt', '/test/workdir');
+
+      expect(result.sessionId).toBeUndefined();
+    });
+
+    it('應該優先使用 hook 記錄的 conversationId 而非傳入的 sessionId', async () => {
+      mockAgyRun(); // 執行中 hook 寫入 fresh-conv-uuid
+
+      const runtime = new AntigravityRuntime('/test/workdir');
+      const result = await runtime.execute('test prompt', '/test/workdir', 'old-conv-uuid');
+
+      expect(result.sessionId).toBe('fresh-conv-uuid');
     });
   });
 

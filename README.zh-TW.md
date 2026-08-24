@@ -236,6 +236,7 @@ OpenCode CLI
 Antigravity CLI
       |
       |-- (PreToolUse Hook) -----> dist/agy-hook.js
+      |-- (Stop Hook) -----------> dist/agy-hook.js （記錄 conversationId 供續聊）
       |-- (HTTP POST) -----------> Approval API Server (:9877)
                                         |-- (傳送 Allow/Deny) --> 使用者 Telegram 點擊
                                         |<-- (Callback 結果) ----
@@ -243,6 +244,10 @@ Antigravity CLI
       |
 繼續或阻止操作
 ```
+
+> **Session 續聊**：hook 橋接會把 `conversationId` 記錄到狀態檔（每次 hook 事件更新，
+> 含不含工具呼叫的輪次），runtime 執行後讀取並在下一輪透過 `--conversation` 帶入，
+> 讓 Antigravity 對話延續上下文。
 
 **4. Gemini CLI 流程**（僅企業用戶仍可使用）
 ```text

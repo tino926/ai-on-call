@@ -1,11 +1,25 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { spawn } from 'child_process';
+import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import { ApprovalApiServer } from '../src/approval-api-server.js';
 import { ApprovalStore } from '../src/approval.js';
 
 const TSX_BIN = path.resolve('node_modules', '.bin', 'tsx');
 const HOOK_SCRIPT = path.resolve('scripts', 'agy-hook.ts');
+
+const ORIGINAL_HOME = process.env.HOME;
+let tmpHome: string;
+
+function createStateEnv(): Record<string, string> {
+  return { AI_ON_CALL_CONVERSATION_STATE: path.join(tmpHome, 'agy-conversation-id') };
+}
+
+function readStateFile(): string | null {
+  const file = path.join(tmpHome, 'agy-conversation-id');
+  return fs.existsSync(file) ? fs.readFileSync(file, 'utf-8') : null;
+}
 
 function createMockBot() {
   return {
@@ -28,9 +42,11 @@ function runHook(port: number, input: string, approvalTimeoutSec = 5): Promise<S
     const proc = spawn(process.execPath, [TSX_BIN, HOOK_SCRIPT], {
       env: {
         ...process.env,
+        HOME: tmpHome,
         HOOK_SERVER_HOST: '127.0.0.1',
         HOOK_SERVER_PORT: String(port),
         APPROVAL_TIMEOUT_SEC: String(approvalTimeoutSec),
+        ...createStateEnv(),
       },
       stdio: ['pipe', 'pipe', 'pipe'],
     });
@@ -62,6 +78,7 @@ describe('E2E: Antigravity hook bridge (agy-hook.ts)', () => {
   let mockBot: MockBot;
 
   beforeEach(async () => {
+    tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), 'agy-hook-state-'));
     store = new ApprovalStore();
     mockBot = createMockBot();
     server = new ApprovalApiServer('127.0.0.1', 0, 10, 123456789, store);
@@ -78,6 +95,8 @@ describe('E2E: Antigravity hook bridge (agy-hook.ts)', () => {
   afterEach(() => {
     server.close();
     httpServer.close();
+    process.env.HOME = ORIGINAL_HOME;
+    fs.rmSync(tmpHome, { recursive: true, force: true });
   });
 
   it('should allow auto-approved tools without contacting the approval server', async () => {
@@ -189,5 +208,39 @@ describe('E2E: Antigravity hook bridge (agy-hook.ts)', () => {
     const decision = JSON.parse(result.stdout);
     expect(decision.decision).toBe('deny');
     expect(decision.reason).toBeDefined();
+  });
+
+  it('should record conversationId to the state file on PreToolUse', async () => {
+    const result = await runHook(port, JSON.stringify({
+      toolCall: { name: 'view_file', args: { AbsolutePath: '/tmp/x' } },
+      conversationId: 'uuid-record-1',
+      workspacePaths: ['/workspace/project'],
+    }));
+
+    expect(result.code).toBe(0);
+    expect(readStateFile()).toBe('uuid-record-1');
+  });
+
+  it('should record conversationId and allow on Stop events (no toolCall)', async () => {
+    const result = await runHook(port, JSON.stringify({
+      executionNum: 1,
+      terminationReason: 'model_stop',
+      fullyIdle: true,
+      conversationId: 'uuid-stop-1',
+      workspacePaths: ['/workspace/project'],
+    }));
+
+    expect(result.code).toBe(0);
+    expect(JSON.parse(result.stdout)).toEqual({ decision: 'allow' });
+    expect(readStateFile()).toBe('uuid-stop-1');
+  });
+
+  it('should not create a state file when conversationId is missing', async () => {
+    const result = await runHook(port, JSON.stringify({
+      toolCall: { name: 'view_file', args: { AbsolutePath: '/tmp/x' } },
+    }));
+
+    expect(result.code).toBe(0);
+    expect(readStateFile()).toBeNull();
   });
 });

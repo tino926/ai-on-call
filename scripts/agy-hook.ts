@@ -1,10 +1,32 @@
 #!/usr/bin/env node
 
 import http from 'http';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 
 const HOOK_SERVER_HOST = process.env.HOOK_SERVER_HOST || '127.0.0.1';
 const HOOK_SERVER_PORT = parseInt(process.env.HOOK_SERVER_PORT || '9877', 10);
 const APPROVAL_TIMEOUT_SEC = parseInt(process.env.APPROVAL_TIMEOUT_SEC || '300', 10);
+
+// Must match the runtime's state path (src/runtime/antigravity.ts). The runtime
+// passes AI_ON_CALL_CONVERSATION_STATE through agy's env; the default matches
+// the global-install layout (~/.ai-on-call/data).
+function getConversationStatePath(): string {
+  return process.env.AI_ON_CALL_CONVERSATION_STATE
+    || path.join(os.homedir(), '.ai-on-call', 'data', 'agy-conversation-id');
+}
+
+function recordConversationId(conversationId: unknown): void {
+  if (typeof conversationId !== 'string' || !conversationId) return;
+  try {
+    const file = getConversationStatePath();
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, conversationId);
+  } catch {
+    // Best-effort: never fail the hook because of state recording
+  }
+}
 
 const autoApproveTools = ['read', 'glob', 'grep', 'search', 'webfetch', 'list_permissions'];
 
@@ -96,6 +118,10 @@ async function main(): Promise<void> {
   process.stdin.on('end', async () => {
     try {
       const data = JSON.parse(input);
+
+      // Capture the conversation id on every hook event (PreToolUse, Stop, ...)
+      // so the runtime can resume the conversation with --conversation
+      recordConversationId(data.conversationId);
 
       if (!data.toolCall) {
         console.log(JSON.stringify({ decision: 'allow' }));

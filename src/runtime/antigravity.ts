@@ -1,7 +1,35 @@
 import { spawn } from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
 import { AiRuntime, RuntimeOutput, ToolCall } from './index.js';
 import { logger } from '../utils/logger.js';
+import { DATA_DIR } from '../utils/paths.js';
 import { createRateLimitState, waitForRateLimit, setupProcessTimeout, checkRateLimitError } from '../utils/runtime.js';
+
+// Must match the hook bridge's default (scripts/agy-hook.ts). The runtime passes
+// this path to agy via env so the hook writes to the same file in dev and
+// global installs.
+export function getConversationStatePath(): string {
+  return process.env.AI_ON_CALL_CONVERSATION_STATE || path.join(DATA_DIR, 'agy-conversation-id');
+}
+
+function clearConversationId(): void {
+  try {
+    fs.rmSync(getConversationStatePath(), { force: true });
+  } catch {
+    // Best-effort
+  }
+}
+
+function readConversationId(): string | undefined {
+  try {
+    // Cap length defensively; real conversation ids are UUIDs (~36 chars)
+    const content = fs.readFileSync(getConversationStatePath(), 'utf-8').trim().slice(0, 128);
+    return content || undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 export class AntigravityRuntime implements AiRuntime {
   readonly name = 'antigravity';
@@ -31,11 +59,16 @@ export class AntigravityRuntime implements AiRuntime {
 
     logger.info(`Executing agy: -p ${prompt.slice(0, 50)}...`);
 
+    // Remove any stale conversation id so we only read one recorded by THIS
+    // execution's hook events (the hook writes it fresh on every event)
+    clearConversationId();
+
     return new Promise((resolve, reject) => {
       const proc = spawn('agy', args, {
         cwd: actualWorkDir,
         env: {
           ...process.env,
+          AI_ON_CALL_CONVERSATION_STATE: getConversationStatePath(),
         },
         stdio: ['ignore', 'pipe', 'pipe'],
         detached: true,
@@ -76,10 +109,14 @@ export class AntigravityRuntime implements AiRuntime {
 
         const result = stdout.trim();
 
+        // The hook bridge records conversationId during execution (PreToolUse
+        // and Stop events); agy -p prints no session info itself
+        const newConversationId = readConversationId();
+
         resolve({
           stdout: result,
           stderr,
-          sessionId,
+          sessionId: newConversationId || sessionId,
         });
       });
 

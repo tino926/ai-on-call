@@ -99,6 +99,14 @@ export function ensureAntigravityHook(): void {
           ],
         },
       ],
+      // Stop uses the simpler schema: a direct handler list, no matcher
+      Stop: [
+        {
+          type: 'command',
+          command: buildHookCommand(scriptPath),
+          timeout: 10,
+        },
+      ],
     };
 
     const newContent = JSON.stringify(hooks, null, 2) + '\n';
