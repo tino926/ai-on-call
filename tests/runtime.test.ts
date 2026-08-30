@@ -220,6 +220,8 @@ describe('Runtime', () => {
       fs.rmSync(STATE_FILE, { force: true });
     });
 
+    const FRESH_CONV_UUID = 'f0e1d2c3-b4a5-4c3d-9e8f-1a2b3c4d5e6f';
+
     function mockAgyRun(stdoutContent = 'response'): void {
       const mockProc = {
         stdout: { on: vi.fn() },
@@ -231,7 +233,7 @@ describe('Runtime', () => {
       mockProc.stdout.on.mockImplementation((event: string, cb: Function) => {
         if (event === 'data') {
           // Simulate the hook bridge writing the conversation id mid-run
-          fs.writeFileSync(STATE_FILE, 'fresh-conv-uuid');
+          fs.writeFileSync(STATE_FILE, FRESH_CONV_UUID);
           cb(Buffer.from(stdoutContent));
         }
       });
@@ -241,14 +243,14 @@ describe('Runtime', () => {
     }
 
     it('應該在執行前清除舊狀態檔，並在結束後讀取新的 conversationId', async () => {
-      fs.writeFileSync(STATE_FILE, 'stale-conv-uuid');
+      fs.writeFileSync(STATE_FILE, 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee');
 
       mockAgyRun();
 
       const runtime = new AntigravityRuntime('/test/workdir');
       const result = await runtime.execute('test prompt', '/test/workdir');
 
-      expect(result.sessionId).toBe('fresh-conv-uuid');
+      expect(result.sessionId).toBe(FRESH_CONV_UUID);
     });
 
     it('應該透過環境變數傳遞狀態檔路徑給 agy', async () => {
@@ -283,12 +285,12 @@ describe('Runtime', () => {
     });
 
     it('應該優先使用 hook 記錄的 conversationId 而非傳入的 sessionId', async () => {
-      mockAgyRun(); // 執行中 hook 寫入 fresh-conv-uuid
+      mockAgyRun(); // 執行中 hook 寫入 FRESH_CONV_UUID
 
       const runtime = new AntigravityRuntime('/test/workdir');
       const result = await runtime.execute('test prompt', '/test/workdir', 'old-conv-uuid');
 
-      expect(result.sessionId).toBe('fresh-conv-uuid');
+      expect(result.sessionId).toBe(FRESH_CONV_UUID);
     });
   });
 

@@ -104,7 +104,7 @@ export function ensureAntigravityHook(): void {
         {
           type: 'command',
           command: buildHookCommand(scriptPath),
-          timeout: 10,
+          timeout: parseInt(process.env.AGY_STOP_HOOK_TIMEOUT || '30', 10),
         },
       ],
     };

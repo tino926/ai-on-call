@@ -35,7 +35,7 @@ describe('ensureAntigravityHook', () => {
     // Stop 事件用簡化格式（直接 handler 清單，無 matcher），用於記錄 conversationId
     expect(hooks['ai-on-call-approval'].Stop).toHaveLength(1);
     expect(hooks['ai-on-call-approval'].Stop[0].type).toBe('command');
-    expect(hooks['ai-on-call-approval'].Stop[0].timeout).toBe(10);
+    expect(hooks['ai-on-call-approval'].Stop[0].timeout).toBe(30);
     expect(hooks['ai-on-call-approval'].Stop[0].command).toBe(
       hooks['ai-on-call-approval'].PreToolUse[0].hooks[0].command
     );

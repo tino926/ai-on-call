@@ -23,8 +23,9 @@ function recordConversationId(conversationId: unknown): void {
     const file = getConversationStatePath();
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, conversationId);
-  } catch {
+  } catch (err) {
     // Best-effort: never fail the hook because of state recording
+    console.error('[agy-hook] failed to record conversationId:', err);
   }
 }
 

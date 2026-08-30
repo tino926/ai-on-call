@@ -21,11 +21,13 @@ function clearConversationId(): void {
   }
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function readConversationId(): string | undefined {
   try {
-    // Cap length defensively; real conversation ids are UUIDs (~36 chars)
     const content = fs.readFileSync(getConversationStatePath(), 'utf-8').trim().slice(0, 128);
-    return content || undefined;
+    if (!content) return undefined;
+    return UUID_REGEX.test(content) ? content : undefined;
   } catch {
     return undefined;
   }
