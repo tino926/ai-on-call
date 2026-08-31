@@ -3,6 +3,7 @@ import { QwenCodeRuntime } from './qwen.js';
 import { OpenCodeRuntime } from './opencode.js';
 import { GeminiCodeRuntime } from './gemini.js';
 import { AntigravityRuntime } from './antigravity.js';
+import { PiRuntime } from './pi.js';
 
 export interface ToolCall {
   name: string;
@@ -41,10 +42,12 @@ export function getRuntime(name: string, workDir: string, hookUrl?: string): AiR
       return new AntigravityRuntime(workDir);
     case 'gemini':
       return new GeminiCodeRuntime(workDir);
+    case 'pi':
+      return new PiRuntime(workDir);
     default:
-      throw new Error(`Unsupported runtime: ${name}. Supported: claude, qwen, opencode, gemini, antigravity`);
+      throw new Error(`Unsupported runtime: ${name}. Supported: claude, qwen, opencode, gemini, antigravity, pi`);
   }
 }
 
 // Re-export for convenience
-export { ClaudeCodeRuntime, QwenCodeRuntime, OpenCodeRuntime, GeminiCodeRuntime, AntigravityRuntime };
+export { ClaudeCodeRuntime, QwenCodeRuntime, OpenCodeRuntime, GeminiCodeRuntime, AntigravityRuntime, PiRuntime };

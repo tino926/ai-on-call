@@ -195,6 +195,7 @@ export async function handleRuntime(ctx: Context, state: BotState): Promise<void
         [
           { text: '🔮 Gemini', callback_data: 'runtime:gemini' },
           { text: '🛸 Antigravity', callback_data: 'runtime:antigravity' },
+          { text: '🥧 Pi', callback_data: 'runtime:pi' },
         ],
       ],
     };
@@ -206,7 +207,7 @@ export async function handleRuntime(ctx: Context, state: BotState): Promise<void
   }
 
   const runtime = args[0].toLowerCase();
-  if (runtime === 'claude' || runtime === 'qwen' || runtime === 'opencode' || runtime === 'gemini' || runtime === 'antigravity') {
+  if (runtime === 'claude' || runtime === 'qwen' || runtime === 'opencode' || runtime === 'gemini' || runtime === 'antigravity' || runtime === 'pi') {
     state.runtimeName = runtime;
     state.clearRuntimeCache();
     
