@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { getRuntime, ClaudeCodeRuntime, QwenCodeRuntime, OpenCodeRuntime, GeminiCodeRuntime, AntigravityRuntime, type ToolCall } from '../src/runtime/index.js';
+import { getRuntime, ClaudeCodeRuntime, QwenCodeRuntime, OpenCodeRuntime, GeminiCodeRuntime, AntigravityRuntime, PiRuntime, type ToolCall } from '../src/runtime/index.js';
 import { spawn } from 'child_process';
 
 vi.mock('child_process', () => ({
@@ -39,6 +39,12 @@ describe('Runtime', () => {
       const runtime = getRuntime('antigravity', '/tmp');
       expect(runtime.name).toBe('antigravity');
       expect(runtime).toBeInstanceOf(AntigravityRuntime);
+    });
+
+    it('應該返回 pi runtime', () => {
+      const runtime = getRuntime('pi', '/tmp');
+      expect(runtime.name).toBe('pi');
+      expect(runtime).toBeInstanceOf(PiRuntime);
     });
 
     it('應該在不支援的 runtime 時拋出錯誤', () => {
@@ -112,6 +118,23 @@ describe('Runtime', () => {
       expect(runtime.needsApproval({ name: 'Grep', params: '{}' })).toBe(false);
       expect(runtime.needsApproval({ name: 'Search', params: '{}' })).toBe(false);
       expect(runtime.needsApproval({ name: 'WebFetch', params: '{}' })).toBe(false);
+    });
+  });
+
+  describe('PiRuntime needsApproval', () => {
+    it('應該在需要審批的工具時返回 true', () => {
+      const runtime = new PiRuntime('/tmp');
+      expect(runtime.needsApproval({ name: 'bash', params: '{}' })).toBe(true);
+      expect(runtime.needsApproval({ name: 'write', params: '{}' })).toBe(true);
+      expect(runtime.needsApproval({ name: 'edit', params: '{}' })).toBe(true);
+    });
+
+    it('應該在不需要審批的工具時返回 false', () => {
+      const runtime = new PiRuntime('/tmp');
+      expect(runtime.needsApproval({ name: 'read', params: '{}' })).toBe(false);
+      expect(runtime.needsApproval({ name: 'grep', params: '{}' })).toBe(false);
+      expect(runtime.needsApproval({ name: 'find', params: '{}' })).toBe(false);
+      expect(runtime.needsApproval({ name: 'ls', params: '{}' })).toBe(false);
     });
   });
 
