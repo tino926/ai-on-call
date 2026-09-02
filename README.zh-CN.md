@@ -32,7 +32,7 @@
 - **轻量** — 没有复杂的中介层，直接沟通
 - **随时可用** — 从手机也能叫 AI 做事
 - **完整对话** — 支持 session，AI 记得之前的上下文
-- **多 AI 支持** — 可自由切换 Claude、Qwen、OpenCode、Gemini、Antigravity
+- **多 AI 支持** — 可自由切换 Claude、Qwen、OpenCode、Gemini、Antigravity、Pi
 
 ---
 
@@ -68,6 +68,7 @@
 | **Gemini CLI** | 快速，Google 生态（仅企业用户，个人版已停服） |
 | **Qwen Code** | 快速，自动批准所有操作 |
 | **OpenCode** | 支持多种模型，性价比高 |
+| **Pi Agent** | 轻量级工具，通过 opencode-pi 使用免费模型，基于扩展的审批机制 |
 
 ---
 

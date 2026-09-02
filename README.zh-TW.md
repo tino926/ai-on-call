@@ -35,7 +35,7 @@ claude code這樣的 Coding Agent 本身就已經具備強大的自主能力，�
 1. **遠端操控 AI** — 傳送訊息給 bot，AI 在你的電腦上執行任務
 2. **權限審批** — 當 AI 需要執行危險操作時，傳送 Allow/Deny 按鈕讓你確認
 3. **Session 管理** — 維持對話連續性，支援切換/恢復之前的 session
-4. **多 runtime 支援** — 可熱切換不同的 AI CLI（Claude / Qwen / OpenCode / Gemini / Antigravity）
+4. **多 runtime 支援** — 可熱切換不同的 AI CLI（Claude / Qwen / OpenCode / Gemini / Antigravity / Pi）
 
 ---
 
@@ -96,7 +96,7 @@ npm start    # 生產模式
 | `/sessions`       | 列出最近的 session（可點擊切換）                        |
 | `/new`            | 開啟新 session                                          |
 | `/restart`        | 重啟 bot                                                |
-| `/runtime <name>` | 切換 AI runtime（claude / qwen / opencode / gemini / antigravity）    |
+| `/runtime <name>` | 切換 AI runtime（claude / qwen / opencode / gemini / antigravity / pi）    |
 | `/lang [code]`    | 顯示或切換語言（zh-tw / zh-cn / en）                    |
 
 ### 一般訊息處理
@@ -136,6 +136,12 @@ npm start    # 生產模式
 - `Grep` — 搜尋內容
 - `Search` — 搜尋
 - `WebFetch` — 網頁擷取
+
+**Pi Agent:**
+- `read` — 讀檔
+- `grep` — 搜尋內容
+- `find` — 搜尋檔案
+- `ls` — 列出目錄
 
 ---
 
@@ -315,7 +321,8 @@ ai-on-call/
 │   │   ├── qwen.ts              # Qwen Code 實作
 │   │   ├── opencode.ts          # OpenCode 實作
 │   │   ├── gemini.ts            # Gemini CLI 實作
-│   │   └── antigravity.ts       # Antigravity CLI 實作
+│   │   ├── antigravity.ts       # Antigravity CLI 實作
+│   │   └── pi.ts               # Pi Agent 實作
 │   └── utils/
 │       ├── logger.ts            # 日誌工具
 │       └── paths.ts             # 路徑管理
@@ -323,6 +330,7 @@ ai-on-call/
 │   ├── check-config.ts          # 設定檢查腳本
 │   ├── gemini-hook.ts           # Gemini Hook 橋接腳本（編譯為 dist/gemini-hook.js）
 │   ├── agy-hook.ts              # Antigravity Hook 橋接腳本（編譯為 dist/agy-hook.js）
+│   ├── pi-approval-extension.ts # Pi Agent 審批 Extension（編譯為 dist/pi-approval-extension.js）
 │   └── opencode-plugin/         # OpenCode 專用 plugin 目錄
 ├── locales/
 │   ├── en.json
@@ -343,7 +351,7 @@ token = "YOUR_TELEGRAM_BOT_TOKEN"   # 必填，從 @BotFather 取得
 allowed_user_id = 123456789        # 必填，0 = 不限制任何人
 
 [runtime]
-default = "claude"                 # 預設 AI runtime：claude / opencode / qwen / gemini / antigravity
+default = "claude"                 # 預設 AI runtime：claude / opencode / qwen / gemini / antigravity / pi
 work_dir = ""                       # 預設工作目錄，留空則使用當前目錄
 
 [hook]
@@ -423,6 +431,7 @@ handle_message 佔住 update queue，等 Claude 回應
 - [x] OpenCode Runtime
 - [x] Gemini Runtime
 - [x] Antigravity Runtime
+- [x] Pi Agent Runtime
 - [x] 多語系支援 (i18n)
 - [x] `/lang` 指令（手動切換語言）
 

@@ -32,7 +32,7 @@ Whether you're on your phone or away from your computer, just send a message to 
 - **Lightweight** — No complex middleware, direct communication
 - **Always accessible** — Use from your phone
 - **Full conversations** — Session support, AI remembers context
-- **Multiple AI** — Switch between Claude, Qwen, OpenCode, Gemini, Antigravity
+- **Multiple AI** — Switch between Claude, Qwen, OpenCode, Gemini, Antigravity, Pi
 
 ---
 
@@ -68,6 +68,7 @@ Whether you're on your phone or away from your computer, just send a message to 
 | **Gemini CLI** | Fast, Google ecosystem (enterprise only, sunset for personal use) |
 | **Qwen Code** | Fast, auto-approves all operations |
 | **OpenCode** | Multiple models, cost-effective |
+| **Pi Agent** | Minimal harness, free models via opencode-pi, extension-based approval |
 
 ---
 
