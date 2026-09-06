@@ -31,6 +31,10 @@ function httpRequest(method: string, urlPath: string, body?: unknown): Promise<a
         let buf = '';
         res.on('data', (chunk: Buffer) => (buf += chunk));
         res.on('end', () => {
+          if (res.statusCode && res.statusCode >= 400) {
+            reject(new Error(`Approval API ${res.statusCode}: ${buf.slice(0, 200)}`));
+            return;
+          }
           try {
             resolve(JSON.parse(buf));
           } catch {
@@ -103,9 +107,13 @@ export default function piApprovalExtension(pi: ExtensionAPI) {
       ctx.sessionManager.getSessionFile()?.split('/').pop()?.replace(/\.jsonl$/, '') ||
       'pi-unknown';
 
-    const approved = await requestApproval(event.toolName, event.input, sessionId);
-    if (!approved) {
-      return { block: true, reason: `Denied by user via Telegram (${event.toolName})` };
+    try {
+      const approved = await requestApproval(event.toolName, event.input, sessionId);
+      if (!approved) {
+        return { block: true, reason: `Denied by user via Telegram (${event.toolName})` };
+      }
+    } catch (err) {
+      return { block: true, reason: `Approval API unavailable: ${err}` };
     }
   });
 }

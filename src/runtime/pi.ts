@@ -27,11 +27,13 @@ export class PiRuntime implements AiRuntime {
 
     const actualWorkDir = _workDir || this.workDir;
 
-    const args = ['-p', prompt, '-e', APPROVAL_EXTENSION_PATH, '--no-session'];
+    const args = ['-p', prompt, '-e', APPROVAL_EXTENSION_PATH];
 
     if (sessionId) {
       args.push('--session', sessionId);
       logger.info(`Using session: ${sessionId}`);
+    } else {
+      args.push('--no-session');
     }
 
     logger.info(`Executing pi: -p ${prompt.slice(0, 50)}...`);
