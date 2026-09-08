@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "language": "한국어",
+    "code": "ko",
+    "version": "1.0.0"
+  },
+  "common": {
+    "loading": "⏳ 처리 중...",
+    "success": "성공",
+    "cancel": "취소",
+    "none": "(없음)",
+    "error": "오류: {message}"
+  },
+  "commands": {
+    "status": {
+      "title": "📊 Bot 상태",
+      "workDir": "작업 디렉토리: {workDir}",
+      "session": "세션: {sessionId}",
+      "runtime": "런타임: {runtimeName}",
+      "pendingApprovals": "승인 대기: {count}"
+    },
+    "pwd": {
+      "title": "📁 현재 디렉토리: {path}"
+    },
+    "cd": {
+      "notFound": "디렉토리를 찾을 수 없습니다: {path}",
+      "success": "작업 디렉토리를 변경했습니다: {path}\n세션이 리셋되었습니다. 다음 메시지에서 새 대화를 시작합니다."
+    },
+    "ls": {
+      "empty": "(빈 디렉토리)",
+      "error": "오류: {message}"
+    },
+    "sessions": {
+      "empty": "세션을 찾을 수 없습니다.",
+      "title": "전환할 세션을 선택하세요:\n{current}"
+    },
+    "new": {
+      "success": "새 세션을 시작했습니다."
+    },
+    "restart": {
+      "message": "Bot을 재시작하고 있습니다..."
+    },
+    "runtime": {
+      "current": "현재 런타임: {runtime}\n사용법: /runtime <claude | qwen | opencode | gemini | antigravity | pi>",
+      "switched": "런타임을 전환했습니다: {runtime}",
+      "unsupported": "지원되지 않는 런타임입니다. 사용 가능: claude, qwen, opencode, gemini, antigravity, pi",
+      "qwenWarning": "\n\n⚠️ 경고: Qwen은 yolo 모드를 사용하여 모든 작업(Write, Bash 등)을 자동 승인합니다.\nTelegram Hook 승인이 없습니다. 주의하세요.",
+      "opencodeWarning": "\n\n⚠️ OpenCode는 아직 실험 단계입니다.",
+      "geminiWarning": "\n\n⚠️ Gemini는 도구 실행에 Hook 승인이 필요합니다.",
+      "piWarning": "\n\n⚠️ Pi Agent는 무료 모델을 사용합니다. Extension에 의한 승인 제어가 활성화됩니다.",
+      "selectPrompt": "전환할 런타임을 선택하세요:"
+    },
+    "lang": {
+      "current": "현재 언어: {lang}\n사용법: /lang <zh-TW | zh-CN | en | ja | ko>",
+      "switched": "언어를 변경했습니다: {lang}",
+      "unsupported": "지원되지 않는 언어입니다. 사용 가능: zh-TW, zh-CN, en, ja, ko"
+    }
+  },
+  "callbacks": {
+    "approval": {
+      "approved": "✅ 승인\n\n{toolInfo}매개변수:\n{params}",
+      "denied": "❌ 거부\n\n{toolInfo}매개변수:\n{params}"
+    },
+    "session": {
+      "switched": "세션을 전환했습니다: {sessionId}"
+    },
+    "summarize": {
+      "loading": "⏳ 요약 생성 중...",
+      "notFound": "대화 기록을 찾을 수 없습니다.",
+      "result": "📝 요약:\n\n{summary}",
+      "error": "오류: {message}",
+      "chunkLabel": "📝 요약 ({current}/{total}):"
+    }
+  },
+  "hooks": {
+    "permission": {
+      "title": "🔐 권한 요청",
+      "tool": "도구: {tool}",
+      "params": "매개변수:\n```{params}```",
+      "detail": "{detail}",
+      "fullParams": "전체 매개변수:\n```{params}```",
+      "allowButton": "✅ 허용",
+      "denyButton": "❌ 거부",
+      "toolTypes": {
+        "bash": "명령:",
+        "file": "파일:",
+        "notebook": "노트북:",
+        "read": "읽기:",
+        "glob": "패턴:",
+        "grep": "검색:"
+      }
+    }
+  },
+  "errors": {
+    "fileNotFound": "파일을 찾을 수 없습니다: {path}",
+    "permissionDenied": "권한이 없습니다: {path}",
+    "timeout": "요청 시간이 초과되었습니다. 다시 시도해 주세요.",
+    "unknown": "알 수 없는 오류: {message}",
+    "rateLimit": "⚠️ API 속도 제한. 1-2분 정도 기다려 주세요.",
+    "unauthorized": "이 Bot을 사용할 권한이 없습니다."
+  }
+}

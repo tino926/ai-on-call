@@ -3,9 +3,9 @@ import * as path from 'path';
 import { Context } from 'telegraf';
 
 type TranslationData = Record<string, any>;
-export type Language = 'zh-TW' | 'zh-CN' | 'en';
+export type Language = 'zh-TW' | 'zh-CN' | 'en' | 'ja' | 'ko';
 
-const SUPPORTED_LANGUAGES: Language[] = ['zh-TW', 'zh-CN', 'en'];
+const SUPPORTED_LANGUAGES: Language[] = ['zh-TW', 'zh-CN', 'en', 'ja', 'ko'];
 const DEFAULT_LANGUAGE: Language = 'zh-TW';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -100,6 +100,8 @@ function normalizeTelegramLanguage(lang: string | undefined): Language | null {
   if (lower === 'zh-tw' || lower === 'zh-hant') return 'zh-TW';
   if (lower === 'zh-cn' || lower === 'zh-hans') return 'zh-CN';
   if (lower === 'en') return 'en';
+  if (lower === 'ja') return 'ja';
+  if (lower === 'ko') return 'ko';
   
   return null;
 }
@@ -137,6 +139,8 @@ export function setUserLang(userId: number, lang: string): boolean {
   if (normalized === 'zh-tw' || normalized === 'zh-hant') targetLang = 'zh-TW';
   else if (normalized === 'zh-cn' || normalized === 'zh-hans') targetLang = 'zh-CN';
   else if (normalized === 'en') targetLang = 'en';
+  else if (normalized === 'ja') targetLang = 'ja';
+  else if (normalized === 'ko') targetLang = 'ko';
   
   if (targetLang) {
     userLangSetting.set(userId, targetLang);

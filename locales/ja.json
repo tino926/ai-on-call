@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "language": "日本語",
+    "code": "ja",
+    "version": "1.0.0"
+  },
+  "common": {
+    "loading": "⏳ 処理中...",
+    "success": "成功",
+    "cancel": "キャンセル",
+    "none": "（なし）",
+    "error": "エラー: {message}"
+  },
+  "commands": {
+    "status": {
+      "title": "📊 Bot ステータス",
+      "workDir": "作業ディレクトリ: {workDir}",
+      "session": "セッション: {sessionId}",
+      "runtime": "ランタイム: {runtimeName}",
+      "pendingApprovals": "承認待ち: {count}"
+    },
+    "pwd": {
+      "title": "📁 カレントディレクトリ: {path}"
+    },
+    "cd": {
+      "notFound": "ディレクトリが見つかりません: {path}",
+      "success": "作業ディレクトリを変更しました: {path}\nセッションがリセットされました。次のメッセージで新しい会話を開始します。"
+    },
+    "ls": {
+      "empty": "（空のディレクトリ）",
+      "error": "エラー: {message}"
+    },
+    "sessions": {
+      "empty": "セッションが見つかりません。",
+      "title": "切り替え先のセッションを選択してください:\n{current}"
+    },
+    "new": {
+      "success": "新しいセッションを開始しました。"
+    },
+    "restart": {
+      "message": "Bot を再起動しています..."
+    },
+    "runtime": {
+      "current": "現在のランタイム: {runtime}\n使い方: /runtime <claude | qwen | opencode | gemini | antigravity | pi>",
+      "switched": "ランタイムを切り替えました: {runtime}",
+      "unsupported": "サポートされていないランタイムです。利用可能: claude, qwen, opencode, gemini, antigravity, pi",
+      "qwenWarning": "\n\n⚠️ 警告: Qwen は yolo モードを使用し、すべての操作（Write, Bash など）を自動承認します。\nTelegram Hook 承認はありません。ご注意ください。",
+      "opencodeWarning": "\n\n⚠️ OpenCode はまだ実験段階です。",
+      "geminiWarning": "\n\n⚠️ Gemini はツール実行に Hook 承認が必要です。",
+      "piWarning": "\n\n⚠️ Pi Agent は無料モデルを使用します。Extension による承認制御が有効です。",
+      "selectPrompt": "切り替え先のランタイムを選択してください:"
+    },
+    "lang": {
+      "current": "現在の言語: {lang}\n使い方: /lang <zh-TW | zh-CN | en | ja | ko>",
+      "switched": "言語を変更しました: {lang}",
+      "unsupported": "サポートされていない言語です。利用可能: zh-TW, zh-CN, en, ja, ko"
+    }
+  },
+  "callbacks": {
+    "approval": {
+      "approved": "✅ 承認\n\n{toolInfo}パラメータ:\n{params}",
+      "denied": "❌ 拒否\n\n{toolInfo}パラメータ:\n{params}"
+    },
+    "session": {
+      "switched": "セッションを切り替えました: {sessionId}"
+    },
+    "summarize": {
+      "loading": "⏳ 要約を生成中...",
+      "notFound": "会話履歴が見つかりません。",
+      "result": "📝 要約:\n\n{summary}",
+      "error": "エラー: {message}",
+      "chunkLabel": "📝 要約 ({current}/{total}):"
+    }
+  },
+  "hooks": {
+    "permission": {
+      "title": "🔐 権限リクエスト",
+      "tool": "ツール: {tool}",
+      "params": "パラメータ:\n```{params}```",
+      "detail": "{detail}",
+      "fullParams": "全パラメータ:\n```{params}```",
+      "allowButton": "✅ 許可",
+      "denyButton": "❌ 拒否",
+      "toolTypes": {
+        "bash": "コマンド:",
+        "file": "ファイル:",
+        "notebook": "ノートブック:",
+        "read": "読み取り:",
+        "glob": "パターン:",
+        "grep": "検索:"
+      }
+    }
+  },
+  "errors": {
+    "fileNotFound": "ファイルが見つかりません: {path}",
+    "permissionDenied": "権限がありません: {path}",
+    "timeout": "リクエストがタイムアウトしました。もう一度お試しください。",
+    "unknown": "不明なエラー: {message}",
+    "rateLimit": "⚠️ API レート制限。1〜2分お待ちください。",
+    "unauthorized": "この Bot を使用する権限がありません。"
+  }
+}

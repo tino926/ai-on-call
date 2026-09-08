@@ -41,18 +41,19 @@
       "message": "Restarting bot..."
     },
     "runtime": {
-      "current": "Current runtime: {runtime}\nUsage: /runtime <claude | qwen | opencode | gemini>",
+      "current": "Current runtime: {runtime}\nUsage: /runtime <claude | qwen | opencode | gemini | antigravity | pi>",
       "switched": "Switched to runtime: {runtime}",
-      "unsupported": "Unsupported runtime. Available: claude, qwen, opencode, gemini.",
+      "unsupported": "Unsupported runtime. Available: claude, qwen, opencode, gemini, antigravity, pi.",
       "qwenWarning": "\n\n⚠️ Warning: Qwen uses yolo mode and will automatically approve all operations (Write, Bash, etc.).\nNo Telegram Hook approval. Please be careful.",
       "opencodeWarning": "\n\n⚠️ OpenCode is still in experimental stage.",
       "geminiWarning": "\n\n⚠️ Gemini still requires Hook approval for tool execution.",
+      "piWarning": "\n\n⚠️ Pi Agent uses free models. Extension-based approval is enabled.",
       "selectPrompt": "Select runtime to switch to:"
     },
     "lang": {
-      "current": "Current language: {lang}\nUsage: /lang <zh-TW | zh-CN | en>",
+      "current": "Current language: {lang}\nUsage: /lang <zh-TW | zh-CN | en | ja | ko>",
       "switched": "Language changed to: {lang}",
-      "unsupported": "Unsupported language. Available: zh-TW, zh-CN, en"
+      "unsupported": "Unsupported language. Available: zh-TW, zh-CN, en, ja, ko"
     }
   },
   "callbacks": {

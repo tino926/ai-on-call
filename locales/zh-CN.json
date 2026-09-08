@@ -40,19 +40,20 @@
     "restart": {
       "message": "正在重启 bot..."
     },
-    "runtime": {
-      "current": "目前 runtime: {runtime}\n用法：/runtime <claude | qwen | opencode | gemini>",
+"runtime": {
+      "current": "目前 runtime: {runtime}\n用法：/runtime <claude | qwen | opencode | gemini | antigravity | pi>",
       "switched": "已切换到 runtime: {runtime}",
-      "unsupported": "不支持的 runtime，目前支持 claude、qwen、opencode 和 gemini。",
+      "unsupported": "不支持的 runtime，目前支持 claude、qwen、opencode、gemini、antigravity 和 pi。",
       "qwenWarning": "\n\n⚠️ 注意：Qwen 使用 yolo mode，会自动批准所有操作（如 Write，Bash 等）。\n没有 Telegram Hook 审批，请注意安全。",
-      "opencodeWarning": "\n\n⚠️ OpenCode 仍在实验阶段。",
+      "opencodeWarning": "\n\n⚠️ OpenCode 仍在实验阶段，请见谅。",
       "geminiWarning": "\n\n⚠️ Gemini 仍需通过 Hook 审批工具执行。",
+      "piWarning": "\n\n⚠️ Pi Agent 使用免费模型，Extension 审批机制已启用。",
       "selectPrompt": "选择要切换的 runtime："
     },
     "lang": {
-      "current": "目前语言：{lang}\n用法：/lang <zh-TW | zh-CN | en>",
+      "current": "目前语言：{lang}\n用法：/lang <zh-TW | zh-CN | en | ja | ko>",
       "switched": "已切换到语言：{lang}",
-      "unsupported": "不支持的语言，目前支持：zh-TW, zh-CN, en"
+      "unsupported": "不支持的语言，目前支持：zh-TW, zh-CN, en, ja, ko"
     }
   },
   "callbacks": {
