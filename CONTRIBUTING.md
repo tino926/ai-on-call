@@ -117,7 +117,7 @@ ai-on-call/
 │   ├── errors.test.ts / i18n.test.ts
 │   ├── message-splitter.test.ts / paths.test.ts
 ├── locales/
-│   ├── zh-TW.json / zh-CN.json / en.json
+│   ├── zh-TW.json / zh-CN.json / en.json / ja.json / ko.json
 ├── scripts/
 │   ├── gemini-hook.ts           # Gemini CLI hook bridge (compiled to dist/gemini-hook.js)
 │   ├── agy-hook.ts              # Antigravity CLI hook bridge (compiled to dist/agy-hook.js)

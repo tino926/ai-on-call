@@ -18,10 +18,14 @@ describe('i18n', () => {
     const zhCN = t('errors.botRequired', 'zh-CN');
     const zhTW = t('errors.botRequired', 'zh-TW');
     const en = t('errors.botRequired', 'en');
+    const ja = t('errors.botRequired', 'ja');
+    const ko = t('errors.botRequired', 'ko');
 
     expect(zhCN).toBeDefined();
     expect(zhTW).toBeDefined();
     expect(en).toBeDefined();
+    expect(ja).toBeDefined();
+    expect(ko).toBeDefined();
   });
 
   it('應該在找不到鍵值時使用 key 本身', () => {

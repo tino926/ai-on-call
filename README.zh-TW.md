@@ -97,7 +97,7 @@ npm start    # 生產模式
 | `/new`            | 開啟新 session                                          |
 | `/restart`        | 重啟 bot                                                |
 | `/runtime <name>` | 切換 AI runtime（claude / qwen / opencode / gemini / antigravity / pi）    |
-| `/lang [code]`    | 顯示或切換語言（zh-tw / zh-cn / en）                    |
+| `/lang [code]`    | 顯示或切換語言（zh-TW / zh-CN / en / ja / ko）          |
 
 ### 一般訊息處理
 
