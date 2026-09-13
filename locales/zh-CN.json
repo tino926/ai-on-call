@@ -40,7 +40,7 @@
     "restart": {
       "message": "正在重启 bot..."
     },
-"runtime": {
+    "runtime": {
       "current": "目前 runtime: {runtime}\n用法：/runtime <claude | qwen | opencode | gemini | antigravity | pi>",
       "switched": "已切换到 runtime: {runtime}",
       "unsupported": "不支持的 runtime，目前支持 claude、qwen、opencode、gemini、antigravity 和 pi。",
