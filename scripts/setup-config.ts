@@ -36,7 +36,7 @@ function validateUserId(userId) {
 }
 
 function validateRuntime(runtime) {
-  const valid = ['claude', 'qwen', 'opencode'];
+  const valid = ['claude', 'qwen', 'opencode', 'gemini', 'antigravity', 'pi'];
   const trimmed = (runtime || 'claude').trim();
   if (!valid.includes(trimmed)) {
     throw new Error(`Runtime 必須是 ${valid.join('/')} 之一`);
@@ -60,6 +60,7 @@ function validateHookSettings() {
     host: '127.0.0.1',
     port: 9876,
     opencode_http_port: 3001,
+    approval_api_port: 9877,
     timeout_sec: 300,
   };
 }
@@ -104,6 +105,7 @@ function printConfigSummary(config) {
   console.log(`  Runtime:    ${config.runtime.default}`);
   console.log(`  Work Dir:   ${config.runtime.work_dir}`);
   console.log(`  Hook Port:  ${config.hook.port}`);
+  console.log(`  Approval API Port: ${config.hook.approval_api_port}`);
   console.log('─'.repeat(40));
 }
 
@@ -116,7 +118,7 @@ async function main() {
 
   const token = await ask('請輸入 Telegram Bot Token (從 @BotFather 取得): ');
   const userId = await ask('請輸入你的 Telegram User ID (從 @userinfobot 查詢): ');
-  const runtime = await ask('預設 AI (claude/qwen/opencode) [claude]: ') || 'claude';
+  const runtime = await ask('預設 AI (claude/qwen/opencode/gemini/antigravity/pi) [claude]: ') || 'claude';
   const workDir = await ask(`工作目錄 [${process.cwd()}]: `) || process.cwd();
 
   let config;
