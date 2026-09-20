@@ -3,6 +3,7 @@ import { Telegraf } from 'telegraf';
 import { ApprovalStore, ApprovalRequest } from './approval.js';
 import { logger } from './utils/logger.js';
 import { t } from './i18n.js';
+import { parseToolDetail } from './utils/tool-detail.js';
 
 type Language = 'zh-TW' | 'zh-CN' | 'en' | 'ja' | 'ko';
 const DEFAULT_LANG: Language = 'zh-TW';
@@ -133,7 +134,7 @@ export class ApprovalApiServer {
           ],
         };
 
-        const detail = this.parseToolDetail(approvalRequest.tool, approvalRequest.params);
+        const detail = parseToolDetail(approvalRequest.tool, approvalRequest.params, this.lang);
         const paramsPreview = approvalRequest.params.length > 500
           ? approvalRequest.params.slice(0, 500) + '...'
           : approvalRequest.params;
@@ -200,45 +201,4 @@ export class ApprovalApiServer {
     }
   }
 
-  private parseToolDetail(tool: string, params: string): string | null {
-    try {
-      const parsed = JSON.parse(params);
-
-      switch (tool) {
-        case 'Bash':
-          if (parsed.command || parsed.CommandLine) {
-            const cmd = (parsed.command || parsed.CommandLine).toString();
-            const cmdPreview = cmd.length > 300 ? cmd.slice(0, 300) + '...' : cmd;
-            return `${t('hooks.permission.toolTypes.bash', this.lang)}\`${cmdPreview}\``;
-          }
-          break;
-        case 'Write':
-        case 'Edit':
-          if (parsed.file_path || parsed.TargetFile) {
-            return `${t('hooks.permission.toolTypes.file', this.lang)}\`${parsed.file_path || parsed.TargetFile}\``;
-          }
-          break;
-        case 'Read':
-          if (parsed.file_path || parsed.AbsolutePath) {
-            return `${t('hooks.permission.toolTypes.read', this.lang)}\`${parsed.file_path || parsed.AbsolutePath}\``;
-          }
-          break;
-        case 'Glob':
-          if (parsed.pattern || parsed.DirectoryPath) {
-            return `${t('hooks.permission.toolTypes.glob', this.lang)}\`${parsed.pattern || parsed.DirectoryPath}\``;
-          }
-          break;
-        case 'Grep':
-          if (parsed.pattern || parsed.Query) {
-            const path = parsed.path || parsed.SearchPath || '.';
-            const pattern = parsed.pattern || parsed.Query;
-            return `${t('hooks.permission.toolTypes.grep', this.lang, { path })}\`${pattern}\` \`${path}\``;
-          }
-          break;
-      }
-    } catch (e) {
-    }
-
-    return null;
-  }
 }

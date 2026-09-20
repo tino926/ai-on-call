@@ -3,6 +3,7 @@ import { ApprovalStore, ApprovalRequest } from './approval.js';
 import { Telegraf } from 'telegraf';
 import { logger } from './utils/logger.js';
 import { t } from './i18n.js';
+import { parseToolDetail } from './utils/tool-detail.js';
 
 type Language = 'zh-TW' | 'zh-CN' | 'en' | 'ja' | 'ko';
 const DEFAULT_LANG: Language = 'zh-TW';
@@ -110,7 +111,7 @@ export class OpenCodeHookServer {
       ],
     };
 
-    const detail = this.parseToolDetail(request.tool, request.params);
+    const detail = parseToolDetail(request.tool, request.params, this.lang);
     const paramsPreview = request.params.length > 500
       ? request.params.slice(0, 500) + '...'
       : request.params;
@@ -146,48 +147,5 @@ export class OpenCodeHookServer {
       logger.warn(`Approval channel error for ${request.id}: ${error.message}`);
       return false;
     }
-  }
-
-  private parseToolDetail(tool: string, params: string): string | null {
-    try {
-      const parsed = JSON.parse(params);
-      
-      switch (tool) {
-        case 'Bash':
-          if (parsed.command) {
-            const cmd = parsed.command.length > 300 
-              ? parsed.command.slice(0, 300) + '...' 
-              : parsed.command;
-            return `${t('hooks.permission.toolTypes.bash', this.lang)}\`${cmd}\``;
-          }
-          break;
-        case 'Write':
-        case 'Edit':
-          if (parsed.file_path) {
-            return `${t('hooks.permission.toolTypes.file', this.lang)}\`${parsed.file_path}\``;
-          }
-          break;
-        case 'Read':
-          if (parsed.file_path) {
-            return `${t('hooks.permission.toolTypes.read', this.lang)}\`${parsed.file_path}\``;
-          }
-          break;
-        case 'Glob':
-          if (parsed.pattern) {
-            return `${t('hooks.permission.toolTypes.glob', this.lang)}\`${parsed.pattern}\``;
-          }
-          break;
-        case 'Grep':
-          if (parsed.pattern) {
-            const path = parsed.path || '.';
-            return `${t('hooks.permission.toolTypes.grep', this.lang, { path })}\`${parsed.pattern}\` \`${path}\``;
-          }
-          break;
-      }
-    } catch (e) {
-      // Not JSON or parse error
-    }
-    
-    return null;
   }
 }
