@@ -4,6 +4,7 @@ import { Telegraf } from 'telegraf';
 import { logger } from './utils/logger.js';
 import { t } from './i18n.js';
 import { parseToolDetail } from './utils/tool-detail.js';
+import { sendApprovalRequest } from './utils/send-approval.js';
 
 type Language = 'zh-TW' | 'zh-CN' | 'en' | 'ja' | 'ko';
 const DEFAULT_LANG: Language = 'zh-TW';
@@ -80,7 +81,15 @@ export class OpenCodeHookServer {
         const request: HookRequest = JSON.parse(body);
         logger.info(`OpenCode hook request: tool=${request.tool}, id=${request.id}`);
 
-        const approved = await this.sendApprovalRequest(this.bot, request);
+        const approved = await sendApprovalRequest({
+          bot: this.bot,
+          approvalStore: this.approvalStore,
+          allowedUserId: this.allowedUserId,
+          lang: this.lang,
+          timeoutSec: this.timeoutSec,
+          request,
+          titlePrefix: '🔐 OpenCode',
+        });
 
         const response: HookResponse = { approved };
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -92,60 +101,5 @@ export class OpenCodeHookServer {
         res.end(JSON.stringify(response));
       }
     });
-  }
-
-  private async sendApprovalRequest(bot: Telegraf, request: HookRequest): Promise<boolean> {
-    const approvalRequest: ApprovalRequest = {
-      id: request.id,
-      tool: request.tool,
-      params: request.params,
-      createdAt: new Date(),
-    };
-
-    const keyboard = {
-      inline_keyboard: [
-        [
-          { text: t('hooks.permission.allowButton', this.lang), callback_data: `approve:${request.id}` },
-          { text: t('hooks.permission.denyButton', this.lang), callback_data: `deny:${request.id}` },
-        ],
-      ],
-    };
-
-    const detail = parseToolDetail(request.tool, request.params, this.lang);
-    const paramsPreview = request.params.length > 500
-      ? request.params.slice(0, 500) + '...'
-      : request.params;
-
-    const title = `🔐 OpenCode ${t('hooks.permission.title', this.lang)}`;
-    const toolLabel = t('hooks.permission.tool', this.lang, { tool: request.tool });
-
-    let text: string;
-    if (detail) {
-      const fullParams = t('hooks.permission.fullParams', this.lang, { params: paramsPreview });
-      text = `${title}\n\n${toolLabel}\n${detail}\n\n${fullParams}`;
-    } else {
-      const paramsText = t('hooks.permission.params', this.lang, { params: paramsPreview });
-      text = `${title}\n\n${toolLabel}\n\n${paramsText}`;
-    }
-
-    try {
-      await bot.telegram.sendMessage(this.allowedUserId, text, {
-        parse_mode: 'Markdown',
-        reply_markup: keyboard,
-      });
-    } catch (error: any) {
-      logger.error(`Failed to send approval request: ${error.message}`);
-      this.approvalStore.complete(request.id, false);
-      return false;
-    }
-
-    try {
-      const approved = await this.approvalStore.register(approvalRequest, this.timeoutSec);
-      logger.info(`Approval result for ${request.id}: ${approved}`);
-      return approved;
-    } catch (error: any) {
-      logger.warn(`Approval channel error for ${request.id}: ${error.message}`);
-      return false;
-    }
   }
 }
