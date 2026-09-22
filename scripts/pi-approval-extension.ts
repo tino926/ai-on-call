@@ -1,6 +1,6 @@
 import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
 import { isToolCallEventType } from '@earendil-works/pi-coding-agent';
-import http from 'http';
+import { httpRequest } from './shared/http.js';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const APPROVAL_HOST = process.env.HOOK_SERVER_HOST || '127.0.0.1';
@@ -10,48 +10,6 @@ const POLL_INTERVAL_MS = 1000;
 
 // Tools that never need approval (read-only)
 const AUTO_APPROVE_TOOLS = new Set(['read', 'grep', 'find', 'ls']);
-
-// ─── HTTP helpers ─────────────────────────────────────────────────────────────
-
-function httpRequest(method: string, urlPath: string, body?: unknown): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const data = body ? JSON.stringify(body) : undefined;
-    const req = http.request(
-      {
-        hostname: APPROVAL_HOST,
-        port: APPROVAL_PORT,
-        path: urlPath,
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(data ? { 'Content-Length': Buffer.byteLength(data) } : {}),
-        },
-      },
-      (res) => {
-        let buf = '';
-        res.on('data', (chunk: Buffer) => (buf += chunk));
-        res.on('end', () => {
-          if (res.statusCode && res.statusCode >= 400) {
-            reject(new Error(`Approval API ${res.statusCode}: ${buf.slice(0, 200)}`));
-            return;
-          }
-          try {
-            resolve(JSON.parse(buf));
-          } catch {
-            reject(new Error(`Invalid JSON from approval API: ${buf.slice(0, 200)}`));
-          }
-        });
-      }
-    );
-    req.on('error', reject);
-    if (data) req.write(data);
-    req.end();
-  });
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((r) => setTimeout(r, ms));
-}
 
 // ─── Approval flow ────────────────────────────────────────────────────────────
 
@@ -63,21 +21,25 @@ async function requestApproval(
   const params = JSON.stringify(toolArgs);
 
   // 1. Submit approval request
-  const { id } = await httpRequest('POST', '/api/approval/request', {
-    tool: toolName,
-    params,
-    session_id: sessionId,
+  const { id } = await httpRequest({
+    hostname: APPROVAL_HOST,
+    port: APPROVAL_PORT,
+    method: 'POST',
+    path: '/api/approval/request',
+    body: { tool: toolName, params, session_id: sessionId },
   });
 
   // 2. Poll until decided or timeout
   const deadline = Date.now() + APPROVAL_TIMEOUT_MS;
   while (Date.now() < deadline) {
-    const status: { approved: boolean | null } = await httpRequest(
-      'GET',
-      `/api/approval/${id}/status`
-    );
+    const status: { approved: boolean | null } = await httpRequest({
+      hostname: APPROVAL_HOST,
+      port: APPROVAL_PORT,
+      method: 'GET',
+      path: `/api/approval/${id}/status`,
+    });
     if (status.approved !== null) return status.approved;
-    await sleep(POLL_INTERVAL_MS);
+    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
   }
 
   return false; // timeout → deny

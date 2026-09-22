@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import http from 'http';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { httpRequest } from './shared/http.js';
 
 const HOOK_SERVER_HOST = process.env.HOOK_SERVER_HOST || '127.0.0.1';
 const HOOK_SERVER_PORT = parseInt(process.env.HOOK_SERVER_PORT || '9877', 10);
@@ -31,32 +31,8 @@ function recordConversationId(conversationId: unknown): void {
 
 const autoApproveTools = ['read', 'glob', 'grep', 'search', 'webfetch', 'list_permissions'];
 
-async function httpRequest(method: string, path: string, body?: object): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const options = {
-      hostname: HOOK_SERVER_HOST,
-      port: HOOK_SERVER_PORT,
-      path,
-      method,
-      headers: { 'Content-Type': 'application/json' },
-    };
-
-    const req = http.request(options, (res) => {
-      let data = '';
-      res.on('data', (chunk) => (data += chunk));
-      res.on('end', () => {
-        try {
-          resolve(JSON.parse(data));
-        } catch {
-          resolve({});
-        }
-      });
-    });
-
-    req.on('error', reject);
-    if (body) req.write(JSON.stringify(body));
-    req.end();
-  });
+function api(method: string, apiPath: string, body?: object): Promise<any> {
+  return httpRequest({ hostname: HOOK_SERVER_HOST, port: HOOK_SERVER_PORT, method, path: apiPath, body });
 }
 
 async function waitForApproval(tool: string, params: string, sessionId: string): Promise<boolean> {
@@ -64,14 +40,14 @@ async function waitForApproval(tool: string, params: string, sessionId: string):
   const timeoutMs = APPROVAL_TIMEOUT_SEC * 1000;
 
   try {
-    const { id } = await httpRequest('POST', '/api/approval/request', {
+    const { id } = await api('POST', '/api/approval/request', {
       tool,
       params,
       session_id: sessionId,
     });
 
     while (Date.now() - startTime < timeoutMs) {
-      const status = await httpRequest('GET', `/api/approval/${id}/status`);
+      const status = await api('GET', `/api/approval/${id}/status`);
       if (status.approved === true) return true;
       if (status.approved === false) return false;
       await new Promise((r) => setTimeout(r, 500));
