@@ -5,6 +5,13 @@ import { t } from '../i18n.js';
 import type { Language } from '../i18n.js';
 import { parseToolDetail } from './tool-detail.js';
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 interface SendApprovalParams {
   bot: Telegraf;
   approvalStore: ApprovalStore;
@@ -47,20 +54,20 @@ export async function sendApprovalRequest({
 
   const titleBase = t('hooks.permission.title', lang);
   const title = titlePrefix ? `${titlePrefix} ${titleBase}` : titleBase;
-  const toolLabel = t('hooks.permission.tool', lang, { tool: request.tool });
+  const toolLabel = t('hooks.permission.tool', lang, { tool: escapeHtml(request.tool) });
 
   let text: string;
   if (detail) {
-    const fullParams = t('hooks.permission.fullParams', lang, { params: paramsPreview });
+    const fullParams = t('hooks.permission.fullParams', lang, { params: `<code>${escapeHtml(paramsPreview)}</code>` });
     text = `${title}\n\n${toolLabel}\n${detail}\n\n${fullParams}`;
   } else {
-    const paramsText = t('hooks.permission.params', lang, { params: paramsPreview });
+    const paramsText = t('hooks.permission.params', lang, { params: `<code>${escapeHtml(paramsPreview)}</code>` });
     text = `${title}\n\n${toolLabel}\n\n${paramsText}`;
   }
 
   try {
     await bot.telegram.sendMessage(allowedUserId, text, {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: keyboard,
     });
   } catch (error: any) {

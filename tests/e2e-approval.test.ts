@@ -89,7 +89,7 @@ describe('E2E: Approval HTTP lifecycle', () => {
       123456789,
       expect.stringContaining('🔮'),
       expect.objectContaining({
-        parse_mode: 'Markdown',
+        parse_mode: 'HTML',
         reply_markup: expect.objectContaining({
           inline_keyboard: expect.any(Array),
         }),

@@ -5,6 +5,13 @@ import { logger } from './utils/logger.js';
 import { t } from './i18n.js';
 import { parseToolDetail } from './utils/tool-detail.js';
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 type Language = 'zh-TW' | 'zh-CN' | 'en' | 'ja' | 'ko';
 const DEFAULT_LANG: Language = 'zh-TW';
 
@@ -140,20 +147,20 @@ export class ApprovalApiServer {
           : approvalRequest.params;
 
         const title = `🔮 ${t('hooks.permission.title', this.lang)}`;
-        const toolLabel = t('hooks.permission.tool', this.lang, { tool: approvalRequest.tool });
+        const toolLabel = t('hooks.permission.tool', this.lang, { tool: escapeHtml(approvalRequest.tool) });
 
         let text: string;
         if (detail) {
-          const fullParams = t('hooks.permission.fullParams', this.lang, { params: paramsPreview });
+          const fullParams = t('hooks.permission.fullParams', this.lang, { params: `<code>${escapeHtml(paramsPreview)}</code>` });
           text = `${title}\n\n${toolLabel}\n${detail}\n\n${fullParams}`;
         } else {
-          const paramsText = t('hooks.permission.params', this.lang, { params: paramsPreview });
+          const paramsText = t('hooks.permission.params', this.lang, { params: `<code>${escapeHtml(paramsPreview)}</code>` });
           text = `${title}\n\n${toolLabel}\n\n${paramsText}`;
         }
 
         try {
           await this.bot.telegram.sendMessage(this.allowedUserId, text, {
-            parse_mode: 'Markdown',
+            parse_mode: 'HTML',
             reply_markup: keyboard,
           });
         } catch (error: any) {
