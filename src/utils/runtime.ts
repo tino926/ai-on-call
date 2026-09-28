@@ -34,7 +34,7 @@ export function setupProcessTimeout(
     logger.warn(`${name} execution timeout after ${timeoutMs}ms`);
     try {
       if (proc.pid) {
-        process.kill(-proc.pid, 'SIGKILL');
+        proc.kill('SIGKILL');
       }
     } catch {
       // Process may already be dead

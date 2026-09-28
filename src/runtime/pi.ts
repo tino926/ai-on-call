@@ -43,7 +43,6 @@ export class PiRuntime implements AiRuntime {
         cwd: actualWorkDir,
         env: process.env,
         stdio: ['ignore', 'pipe', 'pipe'],
-        detached: true,
       });
 
       let stdout = '';

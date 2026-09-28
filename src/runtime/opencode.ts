@@ -54,7 +54,6 @@ export class OpenCodeRuntime implements AiRuntime {
           TELEGRAM_BOT_HOOK_URL: this.hookUrl,
         },
         stdio: ['ignore', 'pipe', 'pipe'],
-        detached: true,
       });
 
       let stdout = '';

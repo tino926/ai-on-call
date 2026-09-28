@@ -38,7 +38,6 @@ export class GeminiCodeRuntime implements AiRuntime {
           TELEGRAM_BOT_HOOK: '1',
         },
         stdio: ['ignore', 'pipe', 'pipe'],
-        detached: true,
       });
 
       let stdout = '';

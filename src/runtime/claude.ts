@@ -53,7 +53,6 @@ export class ClaudeCodeRuntime implements AiRuntime {
           IS_SANDBOX: '1',
         },
         stdio: ['ignore', 'pipe', 'pipe'],
-        detached: true,
       });
 
       let stdout = '';

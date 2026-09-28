@@ -73,7 +73,6 @@ export class AntigravityRuntime implements AiRuntime {
           AI_ON_CALL_CONVERSATION_STATE: getConversationStatePath(),
         },
         stdio: ['ignore', 'pipe', 'pipe'],
-        detached: true,
       });
 
       let stdout = '';
