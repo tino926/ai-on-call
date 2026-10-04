@@ -4,15 +4,15 @@ import { ApprovalStore, ApprovalRequest } from './approval.js';
 import { logger } from './utils/logger.js';
 import { t } from './i18n.js';
 import { parseToolDetail } from './utils/tool-detail.js';
+import type { Language } from './i18n.js';
 
 function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+return s
+    .replace(/&/g, '&')
+    .replace(/</g, '<')
+    .replace(/>/g, '>');
 }
 
-type Language = 'zh-TW' | 'zh-CN' | 'en' | 'ja' | 'ko';
 const DEFAULT_LANG: Language = 'zh-TW';
 
 interface CompletedEntry {

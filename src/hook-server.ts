@@ -5,8 +5,8 @@ import { logger } from './utils/logger.js';
 import { t } from './i18n.js';
 import { parseToolDetail } from './utils/tool-detail.js';
 import { sendApprovalRequest } from './utils/send-approval.js';
+import type { Language } from './i18n.js';
 
-type Language = 'zh-TW' | 'zh-CN' | 'en' | 'ja' | 'ko';
 const DEFAULT_LANG: Language = 'zh-TW';
 
 interface HookRequest {
