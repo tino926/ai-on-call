@@ -4,13 +4,7 @@ import { logger } from './logger.js';
 import { t } from '../i18n.js';
 import type { Language } from '../i18n.js';
 import { parseToolDetail } from './tool-detail.js';
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
+import { escapeHtml } from './escape.js';
 
 interface SendApprovalParams {
   bot: Telegraf;

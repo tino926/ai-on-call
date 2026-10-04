@@ -1,12 +1,6 @@
 import { t } from '../i18n.js';
 import type { Language } from '../i18n.js';
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
+import { escapeHtml } from './escape.js';
 
 /**
  * Parse tool parameters into a human-readable detail string for approval notifications.
