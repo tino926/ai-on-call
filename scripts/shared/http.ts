@@ -8,6 +8,7 @@ export interface HttpRequestOptions {
   method: string;
   path: string;
   body?: object;
+  /** Overall deadline for the whole request/response cycle, not just socket inactivity. */
   timeoutMs?: number;
 }
 
@@ -20,12 +21,13 @@ export function httpRequest({
   timeoutMs = DEFAULT_TIMEOUT_MS,
 }: HttpRequestOptions): Promise<any> {
   return new Promise((resolve, reject) => {
-    let settled = false;
     const data = body ? JSON.stringify(body) : undefined;
+    let settled = false;
 
     const finish = (fn: () => void) => {
       if (settled) return;
       settled = true;
+      clearTimeout(deadline);
       req.destroy();
       fn();
     };
@@ -40,11 +42,11 @@ export function httpRequest({
           'Content-Type': 'application/json',
           ...(data ? { 'Content-Length': Buffer.byteLength(data) } : {}),
         },
-        timeout: timeoutMs,
       },
       (res) => {
         let buf = '';
         res.on('data', (chunk: Buffer) => (buf += chunk));
+        res.on('error', (err: Error) => finish(() => reject(err)));
         res.on('end', () => {
           if (res.statusCode && res.statusCode >= 400) {
             finish(() => reject(new Error(`HTTP ${res.statusCode}: ${buf.slice(0, 200)}`)));
@@ -60,8 +62,15 @@ export function httpRequest({
       }
     );
 
+    // Overall deadline: covers connect, TTFB and body transfer. Node's
+    // `timeout` request option only measures socket inactivity, so a server
+    // that trickles bytes can keep a promise pending forever.
+    const deadline = setTimeout(
+      () => finish(() => reject(new Error(`Request timeout after ${timeoutMs}ms`))),
+      timeoutMs
+    );
+
     req.on('error', (err) => finish(() => reject(err)));
-    req.on('timeout', () => finish(() => reject(new Error(`Request timeout after ${timeoutMs}ms`))));
 
     if (data) req.write(data);
     req.end();
