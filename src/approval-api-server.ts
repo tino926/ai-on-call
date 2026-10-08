@@ -3,7 +3,7 @@ import { Telegraf } from 'telegraf';
 import { ApprovalStore, ApprovalRequest } from './approval.js';
 import { logger } from './utils/logger.js';
 import { t } from './i18n.js';
-import { parseToolDetail } from './utils/tool-detail.js';
+import { parseToolDetail, renderToolDetail, code } from './utils/tool-detail.js';
 import { escapeHtml } from './utils/escape.js';
 import type { Language } from './i18n.js';
 
@@ -145,10 +145,10 @@ export class ApprovalApiServer {
 
         let text: string;
         if (detail) {
-          const fullParams = t('hooks.permission.fullParams', this.lang, { params: `<code>${escapeHtml(paramsPreview)}</code>` });
-          text = `${title}\n\n${toolLabel}\n${detail}\n\n${fullParams}`;
+          const fullParams = t('hooks.permission.fullParams', this.lang, { params: code(paramsPreview) });
+          text = `${title}\n\n${toolLabel}\n${renderToolDetail(detail)}\n\n${fullParams}`;
         } else {
-          const paramsText = t('hooks.permission.params', this.lang, { params: `<code>${escapeHtml(paramsPreview)}</code>` });
+          const paramsText = t('hooks.permission.params', this.lang, { params: code(paramsPreview) });
           text = `${title}\n\n${toolLabel}\n\n${paramsText}`;
         }
 

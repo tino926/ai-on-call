@@ -3,7 +3,7 @@ import { ApprovalStore, ApprovalRequest } from '../approval.js';
 import { logger } from './logger.js';
 import { t } from '../i18n.js';
 import type { Language } from '../i18n.js';
-import { parseToolDetail } from './tool-detail.js';
+import { parseToolDetail, renderToolDetail, code } from './tool-detail.js';
 import { escapeHtml } from './escape.js';
 
 interface SendApprovalParams {
@@ -52,10 +52,10 @@ export async function sendApprovalRequest({
 
   let text: string;
   if (detail) {
-    const fullParams = t('hooks.permission.fullParams', lang, { params: `<code>${escapeHtml(paramsPreview)}</code>` });
-    text = `${title}\n\n${toolLabel}\n${detail}\n\n${fullParams}`;
+    const fullParams = t('hooks.permission.fullParams', lang, { params: code(paramsPreview) });
+    text = `${title}\n\n${toolLabel}\n${renderToolDetail(detail)}\n\n${fullParams}`;
   } else {
-    const paramsText = t('hooks.permission.params', lang, { params: `<code>${escapeHtml(paramsPreview)}</code>` });
+    const paramsText = t('hooks.permission.params', lang, { params: code(paramsPreview) });
     text = `${title}\n\n${toolLabel}\n\n${paramsText}`;
   }
 

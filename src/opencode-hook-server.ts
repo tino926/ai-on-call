@@ -3,7 +3,6 @@ import { ApprovalStore, ApprovalRequest } from './approval.js';
 import { Telegraf } from 'telegraf';
 import { logger } from './utils/logger.js';
 import { t } from './i18n.js';
-import { parseToolDetail } from './utils/tool-detail.js';
 import { sendApprovalRequest } from './utils/send-approval.js';
 import type { Language } from './i18n.js';
 
