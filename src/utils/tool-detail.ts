@@ -3,7 +3,7 @@ import type { Language } from '../i18n.js';
 import { escapeHtml } from './escape.js';
 
 export interface ToolDetail {
-  /** Localized label describing the tool type, e.g. "Bash" */
+  /** Label describing the tool type, e.g. "Bash". May be static text or raw data. */
   label: string;
   /** Raw (unescaped) values to render as code spans */
   values: string[];
@@ -20,9 +20,13 @@ export function code(value: string): string {
   return `<code>${escapeHtml(value)}</code>`;
 }
 
-/** Render structured tool detail as an HTML fragment. */
+/**
+ * Render structured tool detail as an HTML fragment.
+ * Both the label and the values are escaped, so callers may pass raw data in
+ * either field without risking HTML injection.
+ */
 export function renderToolDetail(detail: ToolDetail): string {
-  return `${detail.label} ${detail.values.map(code).join(' ')}`;
+  return `${escapeHtml(detail.label)} ${detail.values.map(code).join(' ')}`;
 }
 
 /**
@@ -96,7 +100,7 @@ export function parseToolDetail(tool: string, params: string, lang: Language): T
       if (pattern) {
         const searchPath = parsed.path || parsed.SearchPath || '.';
         return {
-          label: t('hooks.permission.toolTypes.grep', lang, { path: searchPath }),
+          label: t('hooks.permission.toolTypes.grep', lang),
           values: [pattern.toString(), searchPath.toString()],
         };
       }

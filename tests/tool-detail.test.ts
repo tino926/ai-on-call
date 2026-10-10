@@ -151,4 +151,11 @@ describe('renderToolDetail', () => {
     const detail = { label: 'Read:', values: ['<b>'] };
     expect(renderToolDetail(detail)).toBe(`Read: <code>${lt}b&gt;</code>`);
   });
+
+  it('escapes the label too', () => {
+    const lt = '&' + 'lt;';
+    const gt = '&' + 'gt;';
+    const detail = { label: '<b>label</b>', values: ['ls'] };
+    expect(renderToolDetail(detail)).toBe(`${lt}b${gt}label${lt}/b${gt} <code>ls</code>`);
+  });
 });
