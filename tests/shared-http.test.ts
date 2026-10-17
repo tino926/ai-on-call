@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import http from 'http';
 import type { AddressInfo } from 'net';
 import { httpRequest } from '../scripts/shared/http.js';
@@ -120,25 +120,45 @@ describe('httpRequest', () => {
     ).rejects.toThrow();
   });
 
-  it('settles exactly once (no unhandled rejection) on timeout', async () => {
+  it('rejects when the response stream errors mid-transfer', async () => {
+    const port = await startServer((_req, res) => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.write('{"partial":');
+      setTimeout(() => res.destroy(), 20);
+    });
+
+    const error = await httpRequest({
+      hostname: '127.0.0.1',
+      port,
+      method: 'GET',
+      path: '/reset',
+      timeoutMs: 5000,
+    }).then(
+      () => {
+        throw new Error('expected rejection');
+      },
+      (err: Error) => err
+    );
+
+    expect(error.message).not.toMatch(/timeout/i);
+  });
+
+  it('clears the deadline timer after settling', async () => {
     const port = await startServer((_req, res) => {
       res.writeHead(200);
       const timer = setInterval(() => res.write('x'), 20);
       res.on('close', () => clearInterval(timer));
     });
 
-    let settlements = 0;
-    const promise = httpRequest({
-      hostname: '127.0.0.1',
-      port,
-      method: 'GET',
-      path: '/once',
-      timeoutMs: 200,
-    });
-    promise.then(() => settlements++).catch(() => settlements++);
+    const clearSpy = vi.spyOn(globalThis, 'clearTimeout');
+    try {
+      await expect(
+        httpRequest({ hostname: '127.0.0.1', port, method: 'GET', path: '/once', timeoutMs: 200 })
+      ).rejects.toThrow();
 
-    await expect(promise).rejects.toThrow();
-    await new Promise((r) => setTimeout(r, 300));
-    expect(settlements).toBe(1);
+      expect(clearSpy).toHaveBeenCalled();
+    } finally {
+      clearSpy.mockRestore();
+    }
   });
 });
