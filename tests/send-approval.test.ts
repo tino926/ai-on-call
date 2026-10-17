@@ -160,9 +160,11 @@ describe('sendApprovalRequest', () => {
     store.complete('test-7', true);
     await promise;
 
+    const lt = '&' + 'lt;';
+    const gt = '&' + 'gt;';
     const text = mockBot.telegram.sendMessage.mock.calls.at(-1)![1];
     expect(text).not.toContain('<img');
-    expect(text).toContain('&' + 'lt;img src=x&gt;');
+    expect(text).toContain(`Tool: ${lt}img src=x${gt}`);
   });
 
   it('escapes HTML in command values', async () => {
@@ -176,14 +178,18 @@ describe('sendApprovalRequest', () => {
       request: {
         id: 'test-8',
         tool: 'Bash',
-        params: JSON.stringify({ command: '<script>alert(1)</script>' }),
+        params: JSON.stringify({ command: '<script>alert(1) & x</script>' }),
       },
     });
     await waited;
     store.complete('test-8', true);
     await promise;
 
+    const lt = '&' + 'lt;';
+    const gt = '&' + 'gt;';
+    const amp = '&' + 'amp;';
     const text = mockBot.telegram.sendMessage.mock.calls.at(-1)![1];
     expect(text).not.toContain('<script>');
+    expect(text).toContain(`<code>${lt}script${gt}alert(1) ${amp} x${lt}/script${gt}</code>`);
   });
 });

@@ -333,82 +333,88 @@ describe('E2E: Approval HTTP lifecycle', () => {
       return mockBot.telegram.sendMessage.mock.calls.at(-1)![1];
     }
 
+    async function renderRequest(body: object): Promise<string> {
+      const res = await makeRequest('POST', '/api/approval/request', body);
+      const msg = lastMessage();
+      store.complete(res.id, false);
+      return msg;
+    }
+
     it('wraps parsed detail values in code spans', async () => {
-      await makeRequest('POST', '/api/approval/request', {
+      const msg = await renderRequest({
         tool: 'Bash',
         params: JSON.stringify({ command: 'ls -la' }),
         session_id: 'render-1',
       });
 
-      expect(lastMessage()).toContain(`<code>ls -la</code>`);
+      expect(msg).toContain('<code>ls -la</code>');
     });
 
     it('escapes HTML in tool command values', async () => {
-      await makeRequest('POST', '/api/approval/request', {
+      const msg = await renderRequest({
         tool: 'Bash',
         params: JSON.stringify({ command: '<script>alert(1)</script>' }),
         session_id: 'render-2',
       });
 
-      const msg = lastMessage();
       expect(msg).not.toContain('<script>');
-      expect(msg).toContain(`${lt}script${gt}alert(1)${lt}/script${gt}`);
+      expect(msg).toContain(`<code>${lt}script${gt}alert(1)${lt}/script${gt}</code>`);
     });
 
     it('escapes HTML in a hostile tool name', async () => {
-      await makeRequest('POST', '/api/approval/request', {
+      const msg = await renderRequest({
         tool: '<img src=x>',
         params: '{}',
         session_id: 'render-3',
       });
 
-      const msg = lastMessage();
       expect(msg).not.toContain('<img');
-      expect(msg).toContain(`${lt}img src=x${gt}`);
+      expect(msg).toContain(`Tool: ${lt}img src=x${gt}`);
     });
 
     it('escapes ampersands in detail values', async () => {
-      await makeRequest('POST', '/api/approval/request', {
+      const msg = await renderRequest({
         tool: 'Bash',
         params: JSON.stringify({ command: 'echo "a & b"' }),
         session_id: 'render-4',
       });
 
-      expect(lastMessage()).toContain(`a ${amp} b`);
+      expect(msg).toContain(`<code>echo "a ${amp} b"</code>`);
     });
 
     it('escapes HTML in the full params fallback', async () => {
-      await makeRequest('POST', '/api/approval/request', {
+      const msg = await renderRequest({
         tool: 'UnknownTool',
         params: JSON.stringify({ note: '<b>hi</b>' }),
         session_id: 'render-5',
       });
 
-      const msg = lastMessage();
       expect(msg).not.toContain('<b>');
       expect(msg).toContain(`${lt}b${gt}hi${lt}/b${gt}`);
     });
 
     it('renders both detail and full params for known tools', async () => {
-      await makeRequest('POST', '/api/approval/request', {
+      const msg = await renderRequest({
         tool: 'Grep',
         params: JSON.stringify({ pattern: 'foo', path: 'src/' }),
         session_id: 'render-6',
       });
 
-      const msg = lastMessage();
       expect(msg).toContain('<code>foo</code>');
       expect(msg).toContain('<code>src/</code>');
+      expect(msg).toContain('Full Params:');
+      expect(msg).toContain('{"pattern":"foo","path":"src/"}');
     });
 
     it('truncates very long params in the fallback block', async () => {
-      await makeRequest('POST', '/api/approval/request', {
+      const msg = await renderRequest({
         tool: 'UnknownTool',
         params: 'x'.repeat(900),
         session_id: 'render-7',
       });
 
-      expect(lastMessage()).toContain('...');
+      expect(msg).toContain('x'.repeat(500) + '...');
+      expect(msg).not.toContain('x'.repeat(501));
     });
   });
 });

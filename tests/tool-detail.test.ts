@@ -153,9 +153,10 @@ describe('renderToolDetail', () => {
   });
 
   it('escapes the label too', () => {
+    const amp = '&' + 'amp;';
     const lt = '&' + 'lt;';
     const gt = '&' + 'gt;';
-    const detail = { label: '<b>label</b>', values: ['ls'] };
-    expect(renderToolDetail(detail)).toBe(`${lt}b${gt}label${lt}/b${gt} <code>ls</code>`);
+    const detail = { label: '<b>a & b</b>', values: ['ls'] };
+    expect(renderToolDetail(detail)).toBe(`${lt}b${gt}a ${amp} b${lt}/b${gt} <code>ls</code>`);
   });
 });
