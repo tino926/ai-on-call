@@ -23,11 +23,12 @@ export function httpRequest({
   return new Promise((resolve, reject) => {
     const data = body ? JSON.stringify(body) : undefined;
     let settled = false;
+    let deadline: ReturnType<typeof setTimeout> | undefined;
 
     const finish = (fn: () => void) => {
       if (settled) return;
       settled = true;
-      clearTimeout(deadline);
+      if (deadline) clearTimeout(deadline);
       req.destroy();
       fn();
     };
@@ -65,7 +66,7 @@ export function httpRequest({
     // Overall deadline: covers connect, TTFB and body transfer. Node's
     // `timeout` request option only measures socket inactivity, so a server
     // that trickles bytes can keep a promise pending forever.
-    const deadline = setTimeout(
+    deadline = setTimeout(
       () => finish(() => reject(new Error(`Request timeout after ${timeoutMs}ms`))),
       timeoutMs
     );
