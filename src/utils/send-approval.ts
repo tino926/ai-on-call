@@ -3,8 +3,7 @@ import { ApprovalStore, ApprovalRequest } from '../approval.js';
 import { logger } from './logger.js';
 import { t } from '../i18n.js';
 import type { Language } from '../i18n.js';
-import { parseToolDetail, renderToolDetail, code } from './tool-detail.js';
-import { escapeHtml } from './escape.js';
+import { buildApprovalMessage } from './approval-message.js';
 
 interface SendApprovalParams {
   bot: Telegraf;
@@ -41,23 +40,12 @@ export async function sendApprovalRequest({
     ],
   };
 
-  const detail = parseToolDetail(request.tool, request.params, lang);
-  const paramsPreview = request.params.length > 500
-    ? request.params.slice(0, 500) + '...'
-    : request.params;
-
-  const titleBase = t('hooks.permission.title', lang);
-  const title = titlePrefix ? `${titlePrefix} ${titleBase}` : titleBase;
-  const toolLabel = t('hooks.permission.tool', lang, { tool: escapeHtml(request.tool) });
-
-  let text: string;
-  if (detail) {
-    const fullParams = t('hooks.permission.fullParams', lang, { params: code(paramsPreview) });
-    text = `${title}\n\n${toolLabel}\n${renderToolDetail(detail)}\n\n${fullParams}`;
-  } else {
-    const paramsText = t('hooks.permission.params', lang, { params: code(paramsPreview) });
-    text = `${title}\n\n${toolLabel}\n\n${paramsText}`;
-  }
+  const text = buildApprovalMessage({
+    tool: request.tool,
+    params: request.params,
+    lang,
+    titlePrefix,
+  });
 
   try {
     await bot.telegram.sendMessage(allowedUserId, text, {

@@ -3,8 +3,7 @@ import { Telegraf } from 'telegraf';
 import { ApprovalStore, ApprovalRequest } from './approval.js';
 import { logger } from './utils/logger.js';
 import { t } from './i18n.js';
-import { parseToolDetail, renderToolDetail, code } from './utils/tool-detail.js';
-import { escapeHtml } from './utils/escape.js';
+import { buildApprovalMessage } from './utils/approval-message.js';
 import type { Language } from './i18n.js';
 
 const DEFAULT_LANG: Language = 'zh-TW';
@@ -135,22 +134,12 @@ export class ApprovalApiServer {
           ],
         };
 
-        const detail = parseToolDetail(approvalRequest.tool, approvalRequest.params, this.lang);
-        const paramsPreview = approvalRequest.params.length > 500
-          ? approvalRequest.params.slice(0, 500) + '...'
-          : approvalRequest.params;
-
-        const title = `🔮 ${t('hooks.permission.title', this.lang)}`;
-        const toolLabel = t('hooks.permission.tool', this.lang, { tool: escapeHtml(approvalRequest.tool) });
-
-        let text: string;
-        if (detail) {
-          const fullParams = t('hooks.permission.fullParams', this.lang, { params: code(paramsPreview) });
-          text = `${title}\n\n${toolLabel}\n${renderToolDetail(detail)}\n\n${fullParams}`;
-        } else {
-          const paramsText = t('hooks.permission.params', this.lang, { params: code(paramsPreview) });
-          text = `${title}\n\n${toolLabel}\n\n${paramsText}`;
-        }
+        const text = buildApprovalMessage({
+          tool: approvalRequest.tool,
+          params: approvalRequest.params,
+          lang: this.lang,
+          titlePrefix: '🔮',
+        });
 
         try {
           await this.bot.telegram.sendMessage(this.allowedUserId, text, {

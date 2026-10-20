@@ -1,6 +1,6 @@
 import { t } from '../i18n.js';
 import type { Language } from '../i18n.js';
-import { escapeHtml } from './escape.js';
+import { escapeHtml, truncateEscaped } from './escape.js';
 
 export interface ToolDetail {
   /** Label describing the tool type, e.g. "Bash". May be static text or raw data. */
@@ -9,11 +9,13 @@ export interface ToolDetail {
   values: string[];
 }
 
-const MAX_VALUE_LEN = 300;
-
-function truncate(value: string): string {
-  return value.length > MAX_VALUE_LEN ? value.slice(0, MAX_VALUE_LEN) + '...' : value;
-}
+/**
+ * Maximum escaped length of a single rendered tool value. Measured after HTML
+ * escaping, because entity expansion (`&` becomes 5 characters) would
+ * otherwise push the message past Telegram's 4096-character limit. The extra
+ * 3 characters cover the '...' marker.
+ */
+const MAX_VALUE_LEN = 303;
 
 /** Wrap an arbitrary string in an HTML <code> span, escaping special characters. */
 export function code(value: string): string {
@@ -50,7 +52,7 @@ export function parseToolDetail(tool: string, params: string, lang: Language): T
       if (raw) {
         return {
           label: t('hooks.permission.toolTypes.bash', lang),
-          values: [truncate(raw.toString())],
+          values: [truncateEscaped(raw.toString(), MAX_VALUE_LEN)],
         };
       }
       break;
@@ -61,7 +63,7 @@ export function parseToolDetail(tool: string, params: string, lang: Language): T
       if (filePath) {
         return {
           label: t('hooks.permission.toolTypes.file', lang),
-          values: [filePath.toString()],
+          values: [truncateEscaped(filePath.toString(), MAX_VALUE_LEN)],
         };
       }
       break;
@@ -70,7 +72,7 @@ export function parseToolDetail(tool: string, params: string, lang: Language): T
       if (parsed.notebook_path) {
         return {
           label: t('hooks.permission.toolTypes.notebook', lang),
-          values: [parsed.notebook_path.toString()],
+          values: [truncateEscaped(parsed.notebook_path.toString(), MAX_VALUE_LEN)],
         };
       }
       break;
@@ -80,7 +82,7 @@ export function parseToolDetail(tool: string, params: string, lang: Language): T
       if (filePath) {
         return {
           label: t('hooks.permission.toolTypes.read', lang),
-          values: [filePath.toString()],
+          values: [truncateEscaped(filePath.toString(), MAX_VALUE_LEN)],
         };
       }
       break;
@@ -90,7 +92,7 @@ export function parseToolDetail(tool: string, params: string, lang: Language): T
       if (pattern) {
         return {
           label: t('hooks.permission.toolTypes.glob', lang),
-          values: [pattern.toString()],
+          values: [truncateEscaped(pattern.toString(), MAX_VALUE_LEN)],
         };
       }
       break;
@@ -101,7 +103,10 @@ export function parseToolDetail(tool: string, params: string, lang: Language): T
         const searchPath = parsed.path || parsed.SearchPath || '.';
         return {
           label: t('hooks.permission.toolTypes.grep', lang),
-          values: [pattern.toString(), searchPath.toString()],
+          values: [
+            truncateEscaped(pattern.toString(), MAX_VALUE_LEN),
+            truncateEscaped(searchPath.toString(), MAX_VALUE_LEN),
+          ],
         };
       }
       break;
