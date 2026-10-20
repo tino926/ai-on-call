@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseToolDetail, renderToolDetail, code } from '../src/utils/tool-detail.js';
+import { escapedLength } from '../src/utils/escape.js';
 
 describe('parseToolDetail', () => {
   const lang = 'en';
@@ -137,6 +138,41 @@ describe('code', () => {
     const lt = '&' + 'lt;';
     const gt = '&' + 'gt;';
     expect(code('<b>&</b>')).toBe(`<code>${lt}b&gt;${amp}${lt}/b&gt;</code>`);
+  });
+  describe('value length limits', () => {
+    const lang = 'en';
+
+    it('truncates long grep patterns and paths', () => {
+      const result = parseToolDetail(
+        'Grep',
+        JSON.stringify({ pattern: 'a'.repeat(350), path: 'b'.repeat(350) }),
+        lang
+      );
+      expect(result!.values[0].length).toBe(303);
+      expect(result!.values[1].length).toBe(303);
+    });
+
+    it('truncates long file paths', () => {
+      for (const tool of ['Write', 'Read']) {
+        const result = parseToolDetail(tool, JSON.stringify({ file_path: 'a'.repeat(350) }), lang);
+        expect(result!.values[0].length).toBe(303);
+      }
+    });
+
+    it('truncates long notebook paths', () => {
+      const result = parseToolDetail('NotebookEdit', JSON.stringify({ notebook_path: 'a'.repeat(350) }), lang);
+      expect(result!.values[0].length).toBe(303);
+    });
+
+    it('truncates long glob patterns', () => {
+      const result = parseToolDetail('Glob', JSON.stringify({ pattern: 'a'.repeat(350) }), lang);
+      expect(result!.values[0].length).toBe(303);
+    });
+
+    it('keeps the escaped length of a value within the budget', () => {
+      const result = parseToolDetail('Write', JSON.stringify({ file_path: '&'.repeat(350) }), lang);
+      expect(escapedLength(result!.values[0])).toBeLessThanOrEqual(303);
+    });
   });
 });
 

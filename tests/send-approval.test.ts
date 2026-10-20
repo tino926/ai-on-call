@@ -192,4 +192,26 @@ describe('sendApprovalRequest', () => {
     expect(text).not.toContain('<script>');
     expect(text).toContain(`<code>${lt}script${gt}alert(1) ${amp} x${lt}/script${gt}</code>`);
   });
+
+  it('keeps the message within the Telegram limit for hostile params', async () => {
+    const waited = waitForRequest(store, 'test-9');
+    const promise = sendApprovalRequest({
+      bot: mockBot as any,
+      approvalStore: store,
+      allowedUserId: 123456789,
+      lang: 'en',
+      timeoutSec: 10,
+      request: {
+        id: 'test-9',
+        tool: 'Grep',
+        params: JSON.stringify({ pattern: '&'.repeat(5000), path: '&'.repeat(5000) }),
+      },
+    });
+    await waited;
+    store.complete('test-9', true);
+    await promise;
+
+    const text = mockBot.telegram.sendMessage.mock.calls.at(-1)![1];
+    expect(text.length).toBeLessThanOrEqual(4096);
+  });
 });
