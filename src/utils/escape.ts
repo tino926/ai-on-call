@@ -13,7 +13,8 @@ const AMP_LENGTH = 5;
 const TAG_OPEN_LENGTH = 4;
 const TAG_CLOSE_LENGTH = 4;
 
-function escapedCost(charCode: number): number {
+/** Number of characters the given code unit occupies once HTML-escaped. */
+export function escapedCost(charCode: number): number {
   if (charCode === 0x26) return AMP_LENGTH;
   if (charCode === 0x3c) return TAG_OPEN_LENGTH;
   if (charCode === 0x3e) return TAG_CLOSE_LENGTH;

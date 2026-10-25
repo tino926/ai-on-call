@@ -162,7 +162,7 @@ async function runtimeExecuteInBackground(
     }
 
     for (const chunk of splitMessage(output)) {
-      await ctx.reply(chunk, { parse_mode: 'Markdown' });
+      await ctx.reply(chunk, { parse_mode: 'HTML' });
     }
   } catch (error: any) {
     logger.error(`Runtime error: ${error.message}`);
