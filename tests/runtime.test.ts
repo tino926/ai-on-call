@@ -534,6 +534,55 @@ describe('Runtime', () => {
       const args = spawnCall[1];
       expect(args.filter((a: string) => a === '--file').length).toBe(2);
     });
+
+    it('應該把 stdout 的 type:error 視為錯誤，而不是輸出', async () => {
+      const runtime = new OpenCodeRuntime('/test/workdir', 'http://127.0.0.1:3001');
+      const handlers: Record<string, Function> = {};
+      const mockProc = {
+        stdout: { on: vi.fn((event: string, cb: Function) => { handlers.stdout = cb; }) },
+        stderr: { on: vi.fn((event: string, cb: Function) => { handlers.stderr = cb; }) },
+        on: vi.fn((event: string, cb: Function) => { if (event === 'close') handlers.close = cb; }),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+
+      const pending = runtime.execute('hi', '/test/workdir').catch((e: Error) => e);
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      handlers.stdout(JSON.stringify({
+        type: 'error',
+        sessionID: 'ses_stub',
+        error: { type: 'provider.free-limit', status: 429, message: 'Free usage limit reached.' },
+      }));
+      handlers.close(1);
+
+      const outcome = await pending;
+      expect(outcome).toBeInstanceOf(Error);
+      expect(outcome.message).toContain('Free usage limit reached.');
+      expect(outcome.message).toContain('provider.free-limit');
+    });
+
+    it('應該從 type:text 事件組合輸出', async () => {
+      const runtime = new OpenCodeRuntime('/test/workdir', 'http://127.0.0.1:3001');
+      const handlers: Record<string, Function> = {};
+      const mockProc = {
+        stdout: { on: vi.fn((event: string, cb: Function) => { handlers.stdout = cb; }) },
+        stderr: { on: vi.fn((event: string, cb: Function) => { handlers.stderr = cb; }) },
+        on: vi.fn((event: string, cb: Function) => { if (event === 'close') handlers.close = cb; }),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+
+      const pending = runtime.execute('hi', '/test/workdir');
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      handlers.stdout(JSON.stringify({ type: 'text', sessionID: 'ses_stub', part: { type: 'text', text: 'ok' } }));
+      handlers.close(0);
+
+      const result = await pending;
+      expect(result.stdout).toBe('ok');
+      expect(result.sessionId).toBe('ses_stub');
+    });
   });
 
   describe('GeminiCodeRuntime execute', () => {

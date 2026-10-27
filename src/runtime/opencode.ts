@@ -113,7 +113,18 @@ export class OpenCodeRuntime implements AiRuntime {
                 result = json.result;
                 break;
               }
-              
+
+              // Error events arrive as {"type":"error","error":{...}} on stdout
+              // (stderr stays empty), so they must be checked explicitly or the
+              // raw JSON would be forwarded to the user as a normal answer.
+              if (json.type === 'error') {
+                const detail =
+                  json.error?.message || json.message || 'OpenCode 執行錯誤';
+                const kind = json.error?.type ? ` [${json.error.type}]` : '';
+                reject(new Error(`${detail}${kind}`));
+                return;
+              }
+
               if (json.is_error) {
                 reject(new Error(json.result || json.message || 'OpenCode 執行錯誤'));
                 return;
