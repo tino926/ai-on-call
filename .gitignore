@@ -65,6 +65,7 @@ ai-on-call.supervisor.conf
 # AI CLI tool directories and config files (might contain prompt logs local to the repo)
 .qwen/
 .claude/
+.opencode/
 AGENTS.md
 CLAUDE.md
 
