@@ -154,6 +154,16 @@ describe('E2E: Bot handler pipeline (real spawn)', () => {
       1,
       undefined,
       expect.stringContaining('Runtime execution failed'),
+      expect.objectContaining({
+        reply_markup: expect.objectContaining({
+          inline_keyboard: expect.any(Array),
+        }),
+      }),
     );
+
+    const call = ctx.telegram.editMessageText.mock.calls.at(-1) as any[];
+    const buttons = call[4].reply_markup.inline_keyboard[0];
+    expect(buttons[0].callback_data).toMatch(/^retry:/);
+    expect(buttons[1].callback_data).toMatch(/^dismiss:/);
   });
 });

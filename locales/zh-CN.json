@@ -11,6 +11,13 @@
     "none": "(无)",
     "error": "错误：{message}"
   },
+  "retry": {
+    "failed": "⚠️ 执行失败\n\n{message}\n\n要再试一次请按「重试」，或按「忽略」关闭。",
+    "button": "🔄 重试",
+    "dismissButton": "✖ 忽略",
+    "running": "⏳ 重试中...",
+    "expired": "这次请求已失效（可能已重试过或超时），请重新发送消息。"
+  },
   "commands": {
     "status": {
       "title": "📊 Bot 状态",

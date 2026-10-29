@@ -11,6 +11,13 @@
     "none": "(none)",
     "error": "Error: {message}"
   },
+  "retry": {
+    "failed": "⚠️ Execution failed\n\n{message}\n\nPress \"Retry\" to run it again, or \"Dismiss\" to close.",
+    "button": "🔄 Retry",
+    "dismissButton": "✖ Dismiss",
+    "running": "⏳ Retrying...",
+    "expired": "This request is no longer available (already retried or timed out). Please send the message again."
+  },
   "commands": {
     "status": {
       "title": "📊 Bot Status",

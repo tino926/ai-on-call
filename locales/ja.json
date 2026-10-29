@@ -11,6 +11,13 @@
     "none": "（なし）",
     "error": "エラー: {message}"
   },
+  "retry": {
+    "failed": "⚠️ 実行に失敗しました\n\n{message}\n\nもう一度実行するには「再試行」、閉じるには「無視」を押してください。",
+    "button": "🔄 再試行",
+    "dismissButton": "✖ 無視",
+    "running": "⏳ 再試行中...",
+    "expired": "このリクエストは無効です（再試行済みか期限切れ）。もう一度メッセージを送信してください。"
+  },
   "commands": {
     "status": {
       "title": "📊 Bot ステータス",

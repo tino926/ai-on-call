@@ -5,6 +5,7 @@ import { BotState } from '../state.js';
 import { logger } from '../utils/logger.js';
 import { listSessions, getRecentMessages, formatRecentMessages, getProjectSessionDir } from './commands.js';
 import { t, getUserLang } from '../i18n.js';
+import { retryPendingRequest, dismissPendingRequest } from './handlers.js';
 
 export async function handleCallback(ctx: Context, state: BotState): Promise<void> {
   const callbackQuery = ctx.callbackQuery as any;
@@ -24,6 +25,16 @@ export async function handleCallback(ctx: Context, state: BotState): Promise<voi
 
   if (data.startsWith('summarize:')) {
     await handleSummarizeCallback(ctx, state, data.slice(10));
+    return;
+  }
+
+  if (data.startsWith('retry:')) {
+    await retryPendingRequest(ctx, state, data.slice(6));
+    return;
+  }
+
+  if (data.startsWith('dismiss:')) {
+    await dismissPendingRequest(ctx, state, data.slice(8));
     return;
   }
 

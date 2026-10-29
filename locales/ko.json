@@ -11,6 +11,13 @@
     "none": "(없음)",
     "error": "오류: {message}"
   },
+  "retry": {
+    "failed": "⚠️ 실행 실패\n\n{message}\n\n다시 실행하려면 \"재시도\", 닫으려면 \"무시\"를 누르세요.",
+    "button": "🔄 재시도",
+    "dismissButton": "✖ 무시",
+    "running": "⏳ 재시도 중...",
+    "expired": "이 요청은 더 이상 유효하지 않습니다(이미 재시도했거나 만료됨). 메시지를 다시 보내주세요."
+  },
   "commands": {
     "status": {
       "title": "📊 Bot 상태",

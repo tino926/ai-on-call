@@ -6,7 +6,6 @@ import { BotState } from '../state.js';
 import { logger } from '../utils/logger.js';
 import { t, getUserLang } from '../i18n.js';
 import { splitMessage } from '../utils/message-splitter.js';
-import { retryWithBackoff, isRateLimitError } from '../utils/retry.js';
 
 interface MediaGroupBuffer {
   paths: string[];
@@ -140,13 +139,11 @@ async function runtimeExecuteInBackground(
 
   try {
     const runtime = state.getRuntime();
-    const result = await retryWithBackoff(
-      () => runtime.execute(
-        prompt,
-        state.workDir,
-        state.sessionId,
-        imagePaths
-      ),
+    const result = await runtime.execute(
+      prompt,
+      state.workDir,
+      state.sessionId,
+      imagePaths
     );
 
     if (result.sessionId) {
@@ -166,22 +163,7 @@ async function runtimeExecuteInBackground(
     }
   } catch (error: any) {
     logger.error(`Runtime error: ${error.message}`);
-
-    const isRateLimit = isRateLimitError(error.message);
-    const errorText = isRateLimit
-      ? t('errors.rateLimit', lang)
-      : t('common.error', lang, { message: error.message });
-
-    try {
-      await ctx.telegram.editMessageText(
-        chatId!,
-        messageId,
-        undefined,
-        `${errorText}\n\n(${t('common.error', lang, { message: '' })})`
-      );
-    } catch {
-      await ctx.reply(errorText);
-    }
+    await reportExecutionFailure(ctx, state, prompt, error, chatId, messageId);
   } finally {
     clearInterval(typingInterval);
     if (imagePaths) {
@@ -194,6 +176,90 @@ async function runtimeExecuteInBackground(
       }
     }
   }
+}
+
+/**
+ * Show the failure to the user with retry/dismiss buttons. No automatic retry
+ * happens: the user decides whether to run the same prompt again.
+ */
+async function reportExecutionFailure(
+  ctx: Context,
+  state: BotState,
+  prompt: string,
+  error: Error,
+  chatId: number | undefined,
+  messageId: number
+): Promise<void> {
+  const lang = getUserLang(ctx);
+  const token = state.addPendingRequest(prompt);
+  const text = t('retry.failed', lang, { message: truncateError(error.message) });
+  const extra = {
+    reply_markup: {
+      inline_keyboard: [[
+        { text: t('retry.button', lang), callback_data: `retry:${token}` },
+        { text: t('retry.dismissButton', lang), callback_data: `dismiss:${token}` },
+      ]],
+    },
+  };
+
+  try {
+    await ctx.telegram.editMessageText(chatId!, messageId, undefined, text, extra);
+  } catch {
+    await ctx.reply(text, extra);
+  }
+}
+
+/** Keep forwarded CLI errors readable and inside a single Telegram message. */
+function truncateError(message: string): string {
+  const MAX = 1500;
+  return message.length <= MAX ? message : `${message.slice(0, MAX)}...`;
+}
+
+async function clearInlineKeyboard(ctx: Context): Promise<void> {
+  try {
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+  } catch {
+    // Message too old to edit, or markup already gone
+  }
+}
+
+/** Re-run the prompt attached to a retry button, at the user's request. */
+export async function retryPendingRequest(
+  ctx: Context,
+  state: BotState,
+  token: string
+): Promise<void> {
+  const lang = getUserLang(ctx);
+  const pending = state.takePendingRequest(token);
+
+  if (!pending) {
+    await ctx.answerCbQuery(t('retry.expired', lang));
+    return;
+  }
+
+  await ctx.answerCbQuery();
+  await clearInlineKeyboard(ctx);
+
+  const status = await ctx.reply(t('retry.running', lang));
+  await runtimeExecuteInBackground(
+    state,
+    pending.prompt,
+    undefined,
+    ctx.chat?.id,
+    status.message_id,
+    ctx
+  );
+}
+
+/** Drop the pending request behind a retry button. */
+export async function dismissPendingRequest(
+  ctx: Context,
+  state: BotState,
+  token: string
+): Promise<void> {
+  state.takePendingRequest(token);
+  await ctx.answerCbQuery();
+  await clearInlineKeyboard(ctx);
 }
 
 export function cleanupMediaGroupBuffers(): void {

@@ -169,6 +169,109 @@ describe('handleRuntimeCallback', () => {
   });
 });
 
+describe('Retry buttons and no automatic retry', () => {
+  const mockConfig = {
+    bot: { token: 'test', allowedUserId: 123456 },
+    runtime: { default: 'claude', workDir: '.' },
+    hook: { host: '127.0.0.1', port: 9876, opencodeHttpPort: 3001, approvalApiPort: 9877, timeoutSec: 300 },
+    logging: { level: 'info' },
+  };
+
+  const createCallbackCtx = (callbackData: string) => ({
+    answerCbQuery: vi.fn().mockResolvedValue(true),
+    editMessageText: vi.fn().mockResolvedValue(true),
+    editMessageReplyMarkup: vi.fn().mockResolvedValue(true),
+    reply: vi.fn().mockResolvedValue({ message_id: 999 }),
+    chat: { id: 123456 },
+    from: { id: 123456 },
+    callbackQuery: { data: callbackData, message: { text: 'failed' } },
+    telegram: {
+      deleteMessage: vi.fn().mockResolvedValue(true),
+      sendChatAction: vi.fn().mockResolvedValue(true),
+    },
+  });
+
+  const createMessageCtx = () => ({
+    reply: vi.fn().mockResolvedValue({ message_id: 42 }),
+    chat: { id: 123456 },
+    from: { id: 123456 },
+    message: { text: 'hello' },
+    telegram: {
+      deleteMessage: vi.fn().mockResolvedValue(true),
+      sendChatAction: vi.fn().mockResolvedValue(true),
+      editMessageText: vi.fn().mockResolvedValue(true),
+    },
+  });
+
+  const stubRuntime = (execute: ReturnType<typeof vi.fn>) => {
+    return { name: 'claude', execute, needsApproval: () => false } as any;
+  };
+
+  it('pending request 只能取用一次', () => {
+    const state = new BotState(mockConfig);
+    const token = state.addPendingRequest('hello');
+
+    expect(state.takePendingRequest(token)?.prompt).toBe('hello');
+    expect(state.takePendingRequest(token)).toBeUndefined();
+  });
+
+  it('失敗時只執行一次，並轉送錯誤與重試按鈕', async () => {
+    const state = new BotState(mockConfig);
+    const execute = vi.fn().mockRejectedValue(new Error('Free usage limit reached.'));
+    state.getRuntime = () => stubRuntime(execute);
+
+    const ctx = createMessageCtx();
+    await handleMessage(ctx as any, state);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(execute).toHaveBeenCalledTimes(1);
+
+    const call = ctx.telegram.editMessageText.mock.calls[0];
+    const text = call[3] as string;
+    const extra = call[4] as any;
+    expect(text).toContain('Free usage limit reached.');
+    const buttons = extra.reply_markup.inline_keyboard[0];
+    expect(buttons[0].callback_data).toMatch(/^retry:/);
+    expect(buttons[1].callback_data).toMatch(/^dismiss:/);
+  });
+
+  it('按下重試後以相同 prompt 再執行一次', async () => {
+    const state = new BotState(mockConfig);
+    const execute = vi.fn().mockResolvedValue({ stdout: 'ok' });
+    state.getRuntime = () => stubRuntime(execute);
+    const token = state.addPendingRequest('hello');
+
+    const ctx = createCallbackCtx(`retry:${token}`);
+    await handleCallback(ctx as any, state);
+
+    expect(execute).toHaveBeenCalledWith('hello', expect.any(String), undefined, undefined);
+    expect(ctx.editMessageReplyMarkup).toHaveBeenCalledWith({ inline_keyboard: [] });
+    expect(ctx.reply).toHaveBeenCalledWith('<pre>ok</pre>', { parse_mode: 'HTML' });
+  });
+
+  it('重試 token 過期時提示重新送出', async () => {
+    const state = new BotState(mockConfig);
+    const ctx = createCallbackCtx('retry:expired00');
+
+    await handleCallback(ctx as any, state);
+
+    expect(ctx.answerCbQuery).toHaveBeenCalledWith(expect.stringContaining('失效'));
+  });
+
+  it('按下忽略後清掉鍵盤且不執行', async () => {
+    const state = new BotState(mockConfig);
+    const execute = vi.fn();
+    state.getRuntime = () => stubRuntime(execute);
+    const token = state.addPendingRequest('hello');
+
+    const ctx = createCallbackCtx(`dismiss:${token}`);
+    await handleCallback(ctx as any, state);
+
+    expect(ctx.editMessageReplyMarkup).toHaveBeenCalledWith({ inline_keyboard: [] });
+    expect(execute).not.toHaveBeenCalled();
+  });
+});
+
 describe('Unauthorized user access control', () => {
   const createMockContext = (fromId: number, messageText: string) => ({
     reply: vi.fn().mockResolvedValue(true),
