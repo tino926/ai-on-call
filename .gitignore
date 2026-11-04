@@ -48,6 +48,9 @@ internal/
 # User data (language settings, etc.)
 data/
 
+# Scratch workspace (local only, not a separate repo)
+z_scratch/
+
 
 
 # Old git repo backup (contains full commit history — sensitive!)
