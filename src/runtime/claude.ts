@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import { AiRuntime, RuntimeOutput, ToolCall } from './index.js';
 import { logger } from '../utils/logger.js';
-import { createRateLimitState, waitForRateLimit, setupProcessTimeout, checkRateLimitError } from '../utils/runtime.js';
+import { createRateLimitState, waitForRateLimit, setupProcessTimeout, checkRateLimitError, buildCliFailure } from '../utils/runtime.js';
 
 export class ClaudeCodeRuntime implements AiRuntime {
   readonly name = 'claude';
@@ -74,7 +74,7 @@ export class ClaudeCodeRuntime implements AiRuntime {
         reject(new Error(`Claude execution timeout (${timeoutMs / 1000} seconds)`));
       });
 
-      proc.on('close', (_code) => {
+      proc.on('close', (code) => {
         clearTimeout();
 
         const rateLimitError = checkRateLimitError(stderr, 'Claude');
@@ -86,6 +86,7 @@ export class ClaudeCodeRuntime implements AiRuntime {
         // Parse session_id and result from JSON output
         let sessionId: string | undefined;
         let result: string = stdout;
+        let sawResult = false;
 
         try {
           // Claude Code outputs JSON lines, parse each line to find the result
@@ -108,6 +109,7 @@ export class ClaudeCodeRuntime implements AiRuntime {
 
               // Get result from the final result object
               if (json.type === 'result') {
+                sawResult = true;
                 if (json.result) {
                   result = json.result;
                 }
@@ -131,6 +133,15 @@ export class ClaudeCodeRuntime implements AiRuntime {
           }
         } catch (e) {
           logger.warn(`Failed to parse Claude JSON output: ${e}`);
+        }
+
+        if (code !== 0 && !sawResult) {
+          reject(buildCliFailure('Claude', code, stderr, stdout));
+          return;
+        }
+
+        if (code !== 0) {
+          logger.warn(`Claude exited with code ${code} but returned a result`);
         }
 
         resolve({

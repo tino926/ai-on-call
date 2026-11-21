@@ -52,3 +52,20 @@ export function checkRateLimitError(stderr: string, apiName: string): string | n
   }
   return null;
 }
+
+/**
+ * Build the error for a CLI that exited non-zero without emitting a parsable
+ * result. Without this the raw stdout (often a plain-text failure notice) would
+ * be forwarded to the user as if it were the model's answer.
+ */
+export function buildCliFailure(
+  apiName: string,
+  code: number | null,
+  stderr: string,
+  stdout: string
+): Error {
+  const detail = (stderr.trim() || stdout.trim()).slice(0, 500);
+  return new Error(
+    `${apiName} 執行失敗 (exit code: ${code ?? 'unknown'})${detail ? `\n${detail}` : ''}`
+  );
+}

@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import { AiRuntime, RuntimeOutput, ToolCall } from './index.js';
 import { logger } from '../utils/logger.js';
-import { createRateLimitState, waitForRateLimit, setupProcessTimeout, checkRateLimitError } from '../utils/runtime.js';
+import { createRateLimitState, waitForRateLimit, setupProcessTimeout, checkRateLimitError, buildCliFailure } from '../utils/runtime.js';
 
 export class OpenCodeRuntime implements AiRuntime {
   readonly name = 'opencode';
@@ -85,6 +85,7 @@ export class OpenCodeRuntime implements AiRuntime {
 
         let sessionId: string | undefined;
         let result = '';
+        let sawStructured = false;
 
         try {
           const lines = stdout.trim().split('\n');
@@ -102,6 +103,7 @@ export class OpenCodeRuntime implements AiRuntime {
               }
 
               if (json.type === 'text' && json.part?.text) {
+                sawStructured = true;
                 textParts.push(json.part.text);
               }
               
@@ -110,6 +112,7 @@ export class OpenCodeRuntime implements AiRuntime {
                   reject(new Error(json.result || 'OpenCode 執行錯誤'));
                   return;
                 }
+                sawStructured = true;
                 result = json.result;
                 break;
               }
@@ -144,6 +147,15 @@ export class OpenCodeRuntime implements AiRuntime {
         } catch (e) {
           logger.warn(`Failed to parse OpenCode JSON output: ${e}`);
           result = stdout;
+        }
+
+        if (code !== 0 && !sawStructured) {
+          reject(buildCliFailure('OpenCode', code, stderr, stdout));
+          return;
+        }
+
+        if (code !== 0) {
+          logger.warn(`OpenCode exited with code ${code} but returned output`);
         }
 
         resolve({

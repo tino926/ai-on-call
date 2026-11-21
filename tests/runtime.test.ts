@@ -390,6 +390,50 @@ describe('Runtime', () => {
       expect(args).toContain('/tmp/img1.jpg');
       expect(args).toContain('/tmp/img2.jpg');
     });
+
+    it('應該在 exit code 非 0 且無結構化結果時 reject', async () => {
+      const runtime = new ClaudeCodeRuntime('/test/workdir');
+      const handlers: Record<string, Function> = {};
+      const mockProc = {
+        stdout: { on: vi.fn((event: string, cb: Function) => { handlers.stdout = cb; }) },
+        stderr: { on: vi.fn((event: string, cb: Function) => { handlers.stderr = cb; }) },
+        on: vi.fn((event: string, cb: Function) => { if (event === 'close') handlers.close = cb; }),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+
+      const pending = runtime.execute('hi', '/test/workdir').catch((e: Error) => e);
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      handlers.stdout(Buffer.from('Internal error: API key invalid'));
+      handlers.close(1);
+
+      const outcome = await pending;
+      expect(outcome).toBeInstanceOf(Error);
+      expect(outcome.message).toContain('exit code: 1');
+      expect(outcome.message).toContain('API key invalid');
+    });
+
+    it('應該在 exit code 非 0 但有結構化結果時仍回傳結果', async () => {
+      const runtime = new ClaudeCodeRuntime('/test/workdir');
+      const handlers: Record<string, Function> = {};
+      const mockProc = {
+        stdout: { on: vi.fn((event: string, cb: Function) => { handlers.stdout = cb; }) },
+        stderr: { on: vi.fn((event: string, cb: Function) => { handlers.stderr = cb; }) },
+        on: vi.fn((event: string, cb: Function) => { if (event === 'close') handlers.close = cb; }),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+
+      const pending = runtime.execute('hi', '/test/workdir');
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      handlers.stdout(Buffer.from(JSON.stringify({ type: 'result', result: 'partial answer', session_id: 's1' })));
+      handlers.close(1);
+
+      const result = await pending;
+      expect(result.stdout).toBe('partial answer');
+    });
   });
 
   describe('QwenCodeRuntime execute', () => {
@@ -461,6 +505,29 @@ describe('Runtime', () => {
       const spawnCall = (spawn as any).mock.calls[0];
       const args = spawnCall[1];
       expect(args.filter((a: string) => a === '--file').length).toBe(3);
+    });
+
+    it('應該在 exit code 非 0 且無結構化結果時 reject', async () => {
+      const runtime = new QwenCodeRuntime('/test/workdir');
+      const handlers: Record<string, Function> = {};
+      const mockProc = {
+        stdout: { on: vi.fn((event: string, cb: Function) => { handlers.stdout = cb; }) },
+        stderr: { on: vi.fn((event: string, cb: Function) => { handlers.stderr = cb; }) },
+        on: vi.fn((event: string, cb: Function) => { if (event === 'close') handlers.close = cb; }),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+
+      const pending = runtime.execute('hi', '/test/workdir').catch((e: Error) => e);
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      handlers.stdout(Buffer.from("Internal error: API key invalid. Run 'qwen login' first."));
+      handlers.close(1);
+
+      const outcome = await pending;
+      expect(outcome).toBeInstanceOf(Error);
+      expect(outcome.message).toContain('exit code: 1');
+      expect(outcome.message).toContain('qwen login');
     });
   });
 
@@ -582,6 +649,29 @@ describe('Runtime', () => {
       const result = await pending;
       expect(result.stdout).toBe('ok');
       expect(result.sessionId).toBe('ses_stub');
+    });
+
+    it('應該在 exit code 非 0 且無結構化結果時 reject', async () => {
+      const runtime = new OpenCodeRuntime('/test/workdir', 'http://127.0.0.1:3001');
+      const handlers: Record<string, Function> = {};
+      const mockProc = {
+        stdout: { on: vi.fn((event: string, cb: Function) => { handlers.stdout = cb; }) },
+        stderr: { on: vi.fn((event: string, cb: Function) => { handlers.stderr = cb; }) },
+        on: vi.fn((event: string, cb: Function) => { if (event === 'close') handlers.close = cb; }),
+        pid: 12345,
+      };
+      (spawn as any).mockReturnValue(mockProc);
+
+      const pending = runtime.execute('hi', '/test/workdir').catch((e: Error) => e);
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      handlers.stdout(Buffer.from('Internal error: credentials missing'));
+      handlers.close(1);
+
+      const outcome = await pending;
+      expect(outcome).toBeInstanceOf(Error);
+      expect(outcome.message).toContain('exit code: 1');
+      expect(outcome.message).toContain('credentials missing');
     });
   });
 

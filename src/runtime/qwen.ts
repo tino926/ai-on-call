@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import { AiRuntime, RuntimeOutput, ToolCall } from './index.js';
 import { logger } from '../utils/logger.js';
-import { createRateLimitState, waitForRateLimit, setupProcessTimeout, checkRateLimitError } from '../utils/runtime.js';
+import { createRateLimitState, waitForRateLimit, setupProcessTimeout, checkRateLimitError, buildCliFailure } from '../utils/runtime.js';
 
 export class QwenCodeRuntime implements AiRuntime {
   readonly name = 'qwen';
@@ -69,7 +69,7 @@ export class QwenCodeRuntime implements AiRuntime {
         reject(new Error(`Qwen execution timeout (${timeoutMs / 1000} seconds)`));
       });
 
-      proc.on('close', (_code) => {
+      proc.on('close', (code) => {
         clearTimeout();
 
         const rateLimitError = checkRateLimitError(stderr, 'Qwen');
@@ -81,6 +81,7 @@ export class QwenCodeRuntime implements AiRuntime {
         // Parse Qwen output - it outputs multiple JSON objects (could be one line or multiple)
         let newSessionId: string | undefined;
         let result: string = stdout;
+        let sawResult = false;
         
         try {
           // Try to parse as JSON array first, or try each line
@@ -116,6 +117,7 @@ export class QwenCodeRuntime implements AiRuntime {
             
             // Get result from the final result object
             if (json.type === 'result') {
+              sawResult = true;
               if (json.result) {
                 result = json.result;
               } else if (json.response) {
@@ -143,6 +145,15 @@ export class QwenCodeRuntime implements AiRuntime {
           }
         } catch (e) {
           logger.warn(`Failed to parse Qwen output: ${e}`);
+        }
+
+        if (code !== 0 && !sawResult) {
+          reject(buildCliFailure('Qwen', code, stderr, stdout));
+          return;
+        }
+
+        if (code !== 0) {
+          logger.warn(`Qwen exited with code ${code} but returned a result`);
         }
 
         resolve({
