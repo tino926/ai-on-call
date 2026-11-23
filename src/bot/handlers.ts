@@ -158,9 +158,7 @@ async function runtimeExecuteInBackground(
       // Ignore if can't delete
     }
 
-    for (const chunk of splitMessage(output)) {
-      await ctx.reply(chunk, { parse_mode: 'HTML' });
-    }
+    await sendChunks(ctx, splitMessage(output));
   } catch (error: any) {
     logger.error(`Runtime error: ${error.message}`);
     await reportExecutionFailure(ctx, state, prompt, error, chatId, messageId);
@@ -175,6 +173,51 @@ async function runtimeExecuteInBackground(
         }
       }
     }
+  }
+}
+
+/**
+ * Telegram tolerates roughly one message per second per chat, and a long answer
+ * can now become a dozen chunks. Pace them and honour retry_after on 429.
+ */
+const CHUNK_INTERVAL_MS = 500;
+const MAX_CHUNK_SEND_RETRIES = 3;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+interface RetryAfterCarrier {
+  response?: { parameters?: { retry_after?: unknown } };
+  parameters?: { retry_after?: unknown };
+}
+
+/** Telegram attaches `retry_after` (seconds) to 429 responses. */
+function retryAfterSeconds(error: unknown): number | undefined {
+  const info = error as RetryAfterCarrier;
+  const value =
+    info?.response?.parameters?.retry_after ?? info?.parameters?.retry_after;
+  return typeof value === 'number' ? value : undefined;
+}
+
+async function sendChunk(ctx: Context, chunk: string, attempt = 0): Promise<void> {
+  try {
+    await ctx.reply(chunk, { parse_mode: 'HTML' });
+  } catch (error: unknown) {
+    const retryAfter = retryAfterSeconds(error);
+    if (retryAfter !== undefined && attempt < MAX_CHUNK_SEND_RETRIES) {
+      logger.warn(`Telegram rate limited, retrying chunk in ${retryAfter}s`);
+      await sleep((retryAfter + 1) * 1000);
+      return sendChunk(ctx, chunk, attempt + 1);
+    }
+    throw error;
+  }
+}
+
+async function sendChunks(ctx: Context, chunks: string[]): Promise<void> {
+  for (let i = 0; i < chunks.length; i++) {
+    if (i > 0) await sleep(CHUNK_INTERVAL_MS);
+    await sendChunk(ctx, chunks[i]);
   }
 }
 

@@ -270,6 +270,39 @@ describe('Retry buttons and no automatic retry', () => {
     expect(ctx.editMessageReplyMarkup).toHaveBeenCalledWith({ inline_keyboard: [] });
     expect(execute).not.toHaveBeenCalled();
   });
+
+  it('長輸出分塊送出，遇到 429 依 retry_after 重送同一塊', async () => {
+    const state = new BotState(mockConfig);
+    const execute = vi.fn().mockResolvedValue({ stdout: 'a'.repeat(5000) });
+    state.getRuntime = () => stubRuntime(execute);
+
+    const ctx = createMessageCtx();
+    const rateLimitError = Object.assign(new Error('429: Too Many Requests'), {
+      response: { error_code: 429, parameters: { retry_after: 0 } },
+    });
+    ctx.reply
+      .mockResolvedValueOnce({ message_id: 42 })
+      .mockRejectedValueOnce(rateLimitError)
+      .mockResolvedValue({ message_id: 43 });
+
+    await handleMessage(ctx as any, state);
+
+    await vi.waitFor(() => {
+      const chunks = ctx.reply.mock.calls.filter(
+        ([text]) => typeof text === 'string' && text.startsWith('<pre>')
+      );
+      expect(chunks.length).toBe(3);
+    }, { timeout: 8000, interval: 50 });
+
+    const chunks = ctx.reply.mock.calls.filter(
+      ([text]) => typeof text === 'string' && text.startsWith('<pre>')
+    );
+    // 第一塊被 429 打回後重送一次，所以 1/2 出現兩次
+    expect(chunks[0][0]).toContain('(1/2)');
+    expect(chunks[1][0]).toContain('(1/2)');
+    expect(chunks[2][0]).toContain('(2/2)');
+    expect(ctx.reply).toHaveBeenLastCalledWith(expect.stringContaining('(2/2)'), { parse_mode: 'HTML' });
+  });
 });
 
 describe('Unauthorized user access control', () => {
